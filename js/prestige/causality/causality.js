@@ -1,0 +1,1 @@
+const CausalitySystem = { tick(G){} };
