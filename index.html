@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Reborn Infinity - 完全無料・超多重転生 放置RPG">
+  <meta name="theme-color" content="#070914">
+  <title>Reborn Infinity</title>
+
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/sidebar.css">
+  <link rel="stylesheet" href="css/tabs.css">
+  <link rel="stylesheet" href="css/buttons.css">
+  <link rel="stylesheet" href="css/cards.css">
+  <link rel="stylesheet" href="css/panels.css">
+  <link rel="stylesheet" href="css/progressBars.css">
+  <link rel="stylesheet" href="css/tooltips.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/effects.css">
+  <link rel="stylesheet" href="css/themes/default.css">
+</head>
+<body class="theme-default">
+
+  <header id="main-header">
+    <div class="header-left">
+      <span class="game-title">Reborn Infinity</span>
+      <span class="game-subtitle">超多重転生 放置RPG</span>
+    </div>
+    <div id="tier-display">
+      <span class="tier-label">Tier</span>
+      <span id="current-tier">0</span>
+      <span id="current-tier-name">人生</span>
+    </div>
+    <div class="header-right">
+      <div class="header-stats" id="header-stats"></div>
+      <div class="header-controls">
+        <button id="btn-speed-1"  class="btn-speed active" data-speed="1">x1</button>
+        <button id="btn-speed-2"  class="btn-speed" data-speed="2">x2</button>
+        <button id="btn-speed-5"  class="btn-speed" data-speed="5">x5</button>
+        <button id="btn-speed-10" class="btn-speed" data-speed="10">x10</button>
+        <button id="btn-pause" class="btn-pause">停止</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="app-container">
+    <nav id="sidebar">
+      <div class="sidebar-section">
+        <div class="nav-section-label">メイン</div>
+        <button class="nav-tab active" data-tab="status"><span class="nav-icon">👤</span><span class="nav-label">ステータス</span></button>
+        <button class="nav-tab" data-tab="jobs"><span class="nav-icon">⚔️</span><span class="nav-label">職業</span></button>
+        <button class="nav-tab" data-tab="skills"><span class="nav-icon">📖</span><span class="nav-label">スキル</span></button>
+        <button class="nav-tab" data-tab="explore"><span class="nav-icon">🗺️</span><span class="nav-label">探索</span></button>
+        <button class="nav-tab" data-tab="combat"><span class="nav-icon">🗡️</span><span class="nav-label">戦闘</span></button>
+      </div>
+      <div class="sidebar-section">
+        <div class="nav-section-label">転生</div>
+        <button class="nav-tab" data-tab="rebirth"><span class="nav-icon">🔄</span><span class="nav-label">転生</span><span class="nav-badge hidden" id="rebirth-badge">!</span></button>
+        <button class="nav-tab" data-tab="settings"><span class="nav-icon">🔧</span><span class="nav-label">設定</span></button>
+      </div>
+    </nav>
+
+    <main id="main-content">
+      <div id="tab-content" class="tab-content-area"></div>
+    </main>
+  </div>
+
+  <div id="notification-area"><div id="toast-container"></div></div>
+  <div id="tooltip" style="display:none"></div>
+  <div id="modal-overlay" style="display:none"><div id="modal-container"></div></div>
+
+  <!-- Core -->
+  <script src="js/core/constants.js"></script>
+  <script src="js/core/math.js"></script>
+  <script src="js/core/numbers.js"></script>
+  <script src="js/core/rng.js"></script>
+  <script src="js/core/events.js"></script>
+  <script src="js/core/config.js"></script>
+  <script src="js/core/state.js"></script>
+  <script src="js/core/time.js"></script>
+
+  <!-- Jobs -->
+  <script src="js/jobs/villagerJobs.js"></script>
+  <script src="js/jobs/apprenticeJobs.js"></script>
+  <script src="js/jobs/advancedJobs.js"></script>
+  <script src="js/jobs/eliteJobs.js"></script>
+  <script src="js/jobs/heroJobs.js"></script>
+  <script src="js/jobs/divineJobs.js"></script>
+  <script src="js/jobs/conceptJobs.js"></script>
+  <script src="js/jobs/creatorJobs.js"></script>
+  <script src="js/jobs/jobBonuses.js"></script>
+  <script src="js/jobs/jobExp.js"></script>
+  <script src="js/jobs/jobUnlocks.js"></script>
+  <script src="js/jobs/jobManager.js"></script>
+
+  <!-- Skills -->
+  <script src="js/skills/combatSkills.js"></script>
+  <script src="js/skills/gatherSkills.js"></script>
+  <script src="js/skills/craftSkills.js"></script>
+  <script src="js/skills/magicSkills.js"></script>
+  <script src="js/skills/lifeSkills.js"></script>
+  <script src="js/skills/divineSkills.js"></script>
+  <script src="js/skills/conceptSkills.js"></script>
+  <script src="js/skills/skillSynergy.js"></script>
+  <script src="js/skills/skillUnlocks.js"></script>
+  <script src="js/skills/skillManager.js"></script>
+
+  <!-- Player -->
+  <script src="js/player/currencies.js"></script>
+  <script src="js/player/traits.js"></script>
+  <script src="js/player/age.js"></script>
+  <script src="js/player/lifespan.js"></script>
+
+  <!-- Save -->
+  <script src="js/save/migration.js"></script>
+  <script src="js/save/saveManager.js"></script>
+  <script src="js/save/loadManager.js"></script>
+  <script src="js/save/exportSave.js"></script>
+  <script src="js/save/importSave.js"></script>
+  <script src="js/save/autoSave.js"></script>
+  <script src="js/save/offlineProgress.js"></script>
+
+  <!-- UI・ゲームループ（最後） -->
+  <script src="js/ui.js"></script>
+  <script src="js/core/game.js"></script>
+</body>
+</html>

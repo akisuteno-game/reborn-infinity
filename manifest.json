@@ -1,0 +1,16 @@
+{
+  "name": "Reborn Infinity",
+  "short_name": "RebornInf",
+  "description": "完全無料・超多重転生 放置RPG。16段階の転生システムで無限の成長を体験しよう。",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#070914",
+  "theme_color": "#070914",
+  "lang": "ja",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ],
+  "categories": ["games", "entertainment"]
+}
