@@ -1,0 +1,49 @@
+/* ============================================
+   Reborn Infinity - themes/default.css
+   デフォルトテーマ（ダーク・宇宙）
+   ============================================ */
+
+/* デフォルトテーマはvariables.cssの:rootで定義済み */
+/* ここではテーマ固有の追加スタイルを定義 */
+
+.theme-default body {
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(42, 52, 112, 0.3) 0%,
+    transparent 60%
+  ),
+  var(--color-bg);
+}
+
+/* ヘッダーのグラデーション */
+.theme-default #main-header {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-secondary),
+    color-mix(in srgb, var(--color-accent) 5%, var(--color-bg-secondary)),
+    var(--color-bg-secondary)
+  );
+}
+
+/* サイドバーの微妙なグラデーション */
+.theme-default #sidebar {
+  background: linear-gradient(
+    180deg,
+    var(--color-bg-secondary),
+    color-mix(in srgb, var(--accent-tier1) 3%, var(--color-bg-secondary)) 30%,
+    var(--color-bg-secondary) 100%
+  );
+}
+
+/* スクロールバー */
+.theme-default ::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+.theme-default ::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+}
+
+.theme-default ::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-light);
+}
