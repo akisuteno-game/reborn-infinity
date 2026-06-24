@@ -1,0 +1,1 @@
+const AutoExplore = { tick(G){ if(!Config.get('autoExplore'))return; if(G.explore.current)return; const best=REGION_DATA.filter(r=>WorldMap.isUnlocked(r.id)).slice(-1)[0]; if(best)Travel.moveTo(best.id); } };

@@ -1,0 +1,1 @@
+const AutoDivinity = { tick(G){ } };

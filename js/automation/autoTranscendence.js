@@ -1,0 +1,1 @@
+const AutoTranscendence = { tick(G){ } };
