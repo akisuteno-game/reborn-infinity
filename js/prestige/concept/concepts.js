@@ -1,0 +1,1 @@
+const ConceptSystem = { tick(G){} };
