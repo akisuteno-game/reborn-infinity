@@ -1,0 +1,191 @@
+/* ============================================
+   Reborn Infinity - header.css
+   ヘッダースタイル
+   ============================================ */
+
+#main-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  background: var(--color-bg-secondary);
+  border-bottom: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-6);
+  z-index: var(--z-header);
+  gap: var(--space-4);
+}
+
+/* ===== 左：タイトル ===== */
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.game-title {
+  font-size: var(--text-lg);
+  font-weight: var(--fw-black);
+  color: var(--color-accent);
+  text-shadow: 0 0 12px var(--color-accent-glow);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.game-subtitle {
+  font-size: var(--text-xs);
+  color: var(--color-text-sub);
+  white-space: nowrap;
+}
+
+/* ===== 中央：Tier表示 ===== */
+#tier-display {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-5);
+  flex-shrink: 0;
+}
+
+.tier-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-sub);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+#current-tier {
+  font-size: var(--text-xl);
+  font-weight: var(--fw-black);
+  color: var(--color-accent);
+  line-height: 1;
+}
+
+#current-tier-name {
+  font-size: var(--text-md);
+  font-weight: var(--fw-bold);
+  color: var(--color-gold);
+}
+
+/* ===== 右：ステータス＋コントロール ===== */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-shrink: 0;
+}
+
+/* ミニステータス */
+.header-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.header-stat-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.header-stat-icon {
+  font-size: var(--text-base);
+}
+
+.header-stat-val {
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.header-stat-val.coin  { color: var(--color-coin); }
+.header-stat-val.fame  { color: var(--color-fame); }
+.header-stat-val.soul  { color: var(--color-soul); }
+.header-stat-val.age   { color: var(--color-age); }
+
+/* コントロールボタン */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.btn-speed {
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-sub);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  transition: all var(--transition-fast);
+  min-width: 32px;
+  text-align: center;
+}
+
+.btn-speed:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.btn-speed.active {
+  background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  font-weight: var(--fw-bold);
+}
+
+.btn-pause {
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-sub);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  transition: all var(--transition-fast);
+}
+
+.btn-pause:hover {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+.btn-pause.paused {
+  background: color-mix(in srgb, var(--color-warning) 20%, transparent);
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+}
+
+/* ===== レスポンシブ ===== */
+@media (max-width: 768px) {
+  .game-subtitle { display: none; }
+  .header-stats  { display: none; }
+
+  #tier-display {
+    padding: var(--space-1) var(--space-3);
+  }
+
+  #current-tier      { font-size: var(--text-lg); }
+  #current-tier-name { font-size: var(--text-sm); }
+}
+
+@media (max-width: 480px) {
+  #main-header {
+    padding: 0 var(--space-3);
+    gap: var(--space-2);
+  }
+
+  .game-title { font-size: var(--text-md); }
+
+  .btn-speed { min-width: 26px; padding: var(--space-1) var(--space-2); }
+  .btn-pause { padding: var(--space-1) var(--space-3); }
+}

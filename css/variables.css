@@ -1,0 +1,220 @@
+/* ============================================
+   Reborn Infinity - variables.css
+   CSS カスタムプロパティ（変数）定義
+   ============================================ */
+
+:root {
+  /* ===== カラーパレット（ベース） ===== */
+  --color-bg:            #070914;
+  --color-bg-secondary:  #0d1126;
+  --color-bg-tertiary:   #111827;
+  --color-border:        #2a3470;
+  --color-border-light:  #3d4a8a;
+  --color-text:          #dfe4ff;
+  --color-text-sub:      #8b93c9;
+  --color-text-muted:    #4a5280;
+
+  /* ===== アクセントカラー（Tier別） ===== */
+  --accent-tier0:  #8fae5c;   /* 人生     - 草緑 */
+  --accent-tier1:  #4ade80;   /* 転生     - 緑 */
+  --accent-tier2:  #60a5fa;   /* 覚醒     - 青 */
+  --accent-tier3:  #a78bfa;   /* 超越     - 紫 */
+  --accent-tier4:  #fbbf24;   /* 神格化   - 金 */
+  --accent-tier5:  #5b7fff;   /* 宇宙創造 - 宇宙青 */
+  --accent-tier6:  #8b5cf6;   /* 多元宇宙 - 深紫 */
+  --accent-tier7:  #22d3ee;   /* 次元     - シアン */
+  --accent-tier8:  #34d399;   /* 無限     - エメラルド */
+  --accent-tier9:  #38bdf8;   /* 永遠     - 水色 */
+  --accent-tier10: #3b82f6;   /* 現実     - ブルー */
+  --accent-tier11: #7c3aed;   /* 時空     - インディゴ */
+  --accent-tier12: #10b981;   /* 因果律   - ティール */
+  --accent-tier13: #f59e0b;   /* 概念     - アンバー */
+  --accent-tier14: #6d28d9;   /* 虚無     - ダークパープル */
+  --accent-tier15: #fcd34d;   /* 創造主   - ゴールド */
+
+  /* 現在のアクセントカラー（JSで動的に変更） */
+  --color-accent: var(--accent-tier0);
+  --color-accent-glow: color-mix(in srgb, var(--color-accent) 40%, transparent);
+
+  /* ===== レアリティカラー ===== */
+  --rarity-common:    #9ca3af;
+  --rarity-uncommon:  #4ade80;
+  --rarity-rare:      #60a5fa;
+  --rarity-epic:      #a78bfa;
+  --rarity-legend:    #fbbf24;
+  --rarity-myth:      #f472b6;
+  --rarity-divine:    #fcd34d;
+
+  /* ===== ステータスカラー ===== */
+  --color-hp:       #ef4444;
+  --color-hp-bg:    #7f1d1d;
+  --color-mp:       #3b82f6;
+  --color-mp-bg:    #1e3a8a;
+  --color-xp:       #22c55e;
+  --color-xp-bg:    #14532d;
+  --color-age:      #f59e0b;
+  --color-age-bg:   #78350f;
+  --color-coin:     #fcd34d;
+  --color-fame:     #e879f9;
+  --color-soul:     #818cf8;
+  --color-mat:      #86efac;
+
+  /* ===== ゴールドカラー ===== */
+  --color-gold:  #f3d98a;
+  --color-gold2: #fcd34d;
+
+  /* ===== システムカラー ===== */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger:  #ef4444;
+  --color-info:    #3b82f6;
+
+  /* ===== タイポグラフィ ===== */
+  --font-main:    "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+  --font-display: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-mono:    "Courier New", Courier, monospace;
+  --font-num:     "Courier New", Courier, monospace;
+
+  /* フォントサイズスケール */
+  --text-xs:   10px;
+  --text-sm:   11px;
+  --text-base: 13px;
+  --text-md:   14px;
+  --text-lg:   16px;
+  --text-xl:   18px;
+  --text-2xl:  22px;
+  --text-3xl:  28px;
+  --text-4xl:  36px;
+
+  /* フォントウェイト */
+  --fw-normal:  400;
+  --fw-medium:  500;
+  --fw-bold:    700;
+  --fw-black:   900;
+
+  /* ===== スペーシング ===== */
+  --space-1:  2px;
+  --space-2:  4px;
+  --space-3:  6px;
+  --space-4:  8px;
+  --space-5:  10px;
+  --space-6:  12px;
+  --space-7:  14px;
+  --space-8:  16px;
+  --space-10: 20px;
+  --space-12: 24px;
+  --space-16: 32px;
+  --space-20: 40px;
+
+  /* ===== ボーダー・角丸 ===== */
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   10px;
+  --radius-xl:   14px;
+  --radius-full: 9999px;
+
+  --border-width: 1px;
+  --border-style: solid;
+  --border:       var(--border-width) var(--border-style) var(--color-border);
+
+  /* ===== シャドウ ===== */
+  --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-lg:  0 8px 24px rgba(0, 0, 0, 0.7);
+  --shadow-glow: 0 0 12px var(--color-accent-glow);
+  --shadow-glow-sm: 0 0 6px var(--color-accent-glow);
+
+  /* ===== トランジション ===== */
+  --transition-fast:   0.1s ease;
+  --transition-base:   0.2s ease;
+  --transition-slow:   0.35s ease;
+  --transition-xslow:  0.5s ease;
+
+  /* ===== レイアウト ===== */
+  --header-height:    52px;
+  --sidebar-width:    180px;
+  --sidebar-collapsed: 48px;
+  --content-padding:  12px;
+  --card-padding:     12px 14px;
+
+  /* ===== Z-index ===== */
+  --z-base:     1;
+  --z-dropdown: 100;
+  --z-sidebar:  200;
+  --z-header:   300;
+  --z-tooltip:  400;
+  --z-modal:    500;
+  --z-toast:    600;
+  --z-top:      999;
+
+  /* ===== プログレスバー ===== */
+  --bar-height-sm: 4px;
+  --bar-height-md: 6px;
+  --bar-height-lg: 8px;
+  --bar-height-xl: 10px;
+
+  /* ===== アニメーション ===== */
+  --anim-pulse: 2s ease-in-out infinite;
+  --anim-spin:  1s linear infinite;
+  --anim-bounce: 0.6s ease infinite alternate;
+}
+
+/* ===== ダークテーマ（デフォルト） ===== */
+.theme-default {
+  --color-bg:           #070914;
+  --color-bg-secondary: #0d1126;
+  --color-bg-tertiary:  #111827;
+  --color-border:       #2a3470;
+  --color-text:         #dfe4ff;
+  --color-text-sub:     #8b93c9;
+}
+
+/* ===== ライトテーマ ===== */
+.theme-light {
+  --color-bg:           #f0f2ff;
+  --color-bg-secondary: #e4e7f8;
+  --color-bg-tertiary:  #d8dbf0;
+  --color-border:       #b0b8e0;
+  --color-text:         #1a1f40;
+  --color-text-sub:     #4a5280;
+}
+
+/* ===== ボイドテーマ（虚無） ===== */
+.theme-void {
+  --color-bg:           #000005;
+  --color-bg-secondary: #05020f;
+  --color-bg-tertiary:  #0a051a;
+  --color-border:       #1a0a3a;
+  --color-text:         #c8c0ff;
+  --color-text-sub:     #6040a0;
+}
+
+/* ===== 神格テーマ ===== */
+.theme-divine {
+  --color-bg:           #0a0800;
+  --color-bg-secondary: #1a1200;
+  --color-bg-tertiary:  #251a00;
+  --color-border:       #4a3800;
+  --color-text:         #fff5cc;
+  --color-text-sub:     #c0a040;
+}
+
+/* ===== 宇宙テーマ ===== */
+.theme-cosmic {
+  --color-bg:           #020510;
+  --color-bg-secondary: #060d20;
+  --color-bg-tertiary:  #0a1430;
+  --color-border:       #1a2860;
+  --color-text:         #c0d8ff;
+  --color-text-sub:     #6080c0;
+}
+
+/* ===== 創造主テーマ ===== */
+.theme-creator {
+  --color-bg:           #0a0800;
+  --color-bg-secondary: #14100a;
+  --color-bg-tertiary:  #1e1810;
+  --color-border:       #5a4800;
+  --color-text:         #fff8e0;
+  --color-text-sub:     #d4a820;
+}

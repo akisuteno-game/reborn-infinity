@@ -1,0 +1,224 @@
+/* ============================================
+   Reborn Infinity - progressBars.css
+   プログレスバー・ゲージコンポーネント
+   ============================================ */
+
+/* ===== ベースバー ===== */
+.bar-wrap {
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* バーサイズ */
+.bar-xs { height: var(--bar-height-sm); }
+.bar-sm { height: var(--bar-height-md); }
+.bar-md { height: var(--bar-height-lg); }
+.bar-lg { height: var(--bar-height-xl); }
+
+/* ===== カラーバリアント ===== */
+.bar-xp      { background: var(--color-xp); }
+.bar-hp      { background: var(--color-hp); }
+.bar-mp      { background: var(--color-mp); }
+.bar-age     { background: var(--color-age); }
+.bar-accent  { background: var(--color-accent); }
+.bar-gold    { background: var(--color-gold); }
+.bar-danger  { background: var(--color-danger); }
+.bar-success { background: var(--color-success); }
+.bar-info    { background: var(--color-info); }
+.bar-soul    { background: var(--color-soul); }
+
+/* ===== ラベル付きバー ===== */
+.bar-with-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.bar-with-label .bar-wrap {
+  flex: 1;
+}
+
+.bar-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-sub);
+  flex-shrink: 0;
+  min-width: 60px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== XPバー（職業・スキル） ===== */
+.xp-bar-container {
+  margin-top: var(--space-2);
+}
+
+.xp-bar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.xp-bar-wrap {
+  flex: 1;
+  height: var(--bar-height-md);
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background: var(--color-xp);
+  border-radius: var(--radius-full);
+  transition: width 0.2s ease;
+}
+
+.xp-bar-text {
+  font-size: var(--text-xs);
+  color: var(--color-text-sub);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== HPバー ===== */
+.hp-bar-wrap {
+  height: var(--bar-height-lg);
+  background: var(--color-hp-bg);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-top: var(--space-2);
+}
+
+.hp-bar-fill {
+  height: 100%;
+  background: var(--color-hp);
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+.hp-bar-fill.low    { background: #ef4444; }
+.hp-bar-fill.medium { background: #f59e0b; }
+.hp-bar-fill.high   { background: #22c55e; }
+
+/* ===== MPバー ===== */
+.mp-bar-wrap {
+  height: var(--bar-height-md);
+  background: var(--color-mp-bg);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-top: var(--space-2);
+}
+
+.mp-bar-fill {
+  height: 100%;
+  background: var(--color-mp);
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+/* ===== 年齢バー ===== */
+.age-bar-wrap {
+  height: var(--bar-height-sm);
+  background: var(--color-age-bg);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-top: var(--space-2);
+}
+
+.age-bar-fill {
+  height: 100%;
+  background: var(--color-age);
+  border-radius: var(--radius-full);
+  transition: width 0.2s ease;
+}
+
+.age-bar-fill.near-end {
+  background: var(--color-danger);
+  animation: ageWarning 1s ease-in-out infinite;
+}
+
+@keyframes ageWarning {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* ===== 探索プログレスバー ===== */
+.explore-bar-wrap {
+  height: var(--bar-height-md);
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-top: var(--space-2);
+}
+
+.explore-bar-fill {
+  height: 100%;
+  background: var(--color-danger);
+  border-radius: var(--radius-full);
+  transition: width 0.2s ease;
+}
+
+/* ===== 多段プログレス（重複バー） ===== */
+.multi-bar {
+  position: relative;
+  height: var(--bar-height-lg);
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.multi-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.25s ease;
+}
+
+.multi-bar-fill:nth-child(1) { z-index: 3; }
+.multi-bar-fill:nth-child(2) { z-index: 2; opacity: 0.5; }
+.multi-bar-fill:nth-child(3) { z-index: 1; opacity: 0.25; }
+
+/* ===== パーセンテージ表示 ===== */
+.bar-pct {
+  font-size: var(--text-xs);
+  color: var(--color-text-sub);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== グローエフェクト ===== */
+.bar-fill.glow {
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* ===== ストライプアニメーション ===== */
+.bar-fill.striped::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 8px,
+    rgba(255,255,255,0.08) 8px,
+    rgba(255,255,255,0.08) 16px
+  );
+  animation: stripeMove 1s linear infinite;
+}
+
+@keyframes stripeMove {
+  from { background-position: 0 0; }
+  to   { background-position: 22px 0; }
+}
