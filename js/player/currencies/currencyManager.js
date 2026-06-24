@@ -1,0 +1,1 @@
+const CurrencyManager = { get(id){ return G.resources[id]||0; }, add(id,n){ G.resources[id]=(G.resources[id]||0)+n; }, spend(id,n){ if((G.resources[id]||0)<n)return false; G.resources[id]-=n; return true; } };
