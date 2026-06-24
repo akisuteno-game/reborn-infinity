@@ -1,0 +1,1 @@
+const RealitySystem = { tick(G){} };
