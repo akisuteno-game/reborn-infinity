@@ -1,0 +1,1 @@
+const MultiverseSystem = { tick(G){} };
