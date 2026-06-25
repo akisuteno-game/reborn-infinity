@@ -124,9 +124,9 @@ const MathUtil = {
       fragments += G.jobs.levels[id];
     }
     // 年齢ボーナス
-    fragments += G.age * 0.5;
+    fragments += G.time.age * 0.5;
     // コインボーナス
-    fragments += Math.log10(Math.max(1, G.coins)) * 10;
+    fragments += Math.log10(Math.max(1, G.resources.coins)) * 10;
     // 実績ボーナス
     fragments += G.achievements.unlocked.length * 5;
     // ボス討伐ボーナス
