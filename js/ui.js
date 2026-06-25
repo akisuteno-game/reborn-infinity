@@ -146,31 +146,7 @@ const ENEMY_DATA = [
   { id: 'demon',  name: '魔王',     hp: 600, atk: 60, def: 35, coin: 300, reqFame: 90 },
 ];
 
-// ===== Stats（js/player/stats.jsの代替） =====
-const Stats = {
-  getAtk()      { return CONSTANTS.BATTLE_BASE_ATK + SkillManager.getStatBonus('atk') + JobBonuses.getAtkBonus(); },
-  getDef()      { return CONSTANTS.BATTLE_BASE_DEF + SkillManager.getStatBonus('def') + JobBonuses.getDefBonus(); },
-  getMaxHp()    { return Math.floor(CONSTANTS.BATTLE_BASE_HP  + SkillManager.getStatBonus('hp')); },
-  getMaxMp()    { return Math.floor(CONSTANTS.BATTLE_BASE_MP  + SkillManager.getStatBonus('mp')); },
-  getCritRate() { return MathUtil.clamp(CONSTANTS.CRIT_RATE_BASE + SkillManager.getStatBonus('critRate'), 0, 0.75); },
-  getCritMult() { return CONSTANTS.CRIT_MULT_BASE + SkillManager.getStatBonus('critMult'); },
-  getXpMult()   { return SkillManager.getXpMult() * (G.rebirth?.bonusXp || 1); },
-  getCoinMult() { return SkillManager.getCoinMult(); },
-  getFameMult() { return SkillManager.getFameMult(); },
-  getMatMult()  { return SkillManager.getMatMult(); },
-  getLifespanBonus() { return SkillManager.getStatBonus('lifespan'); },
-  update() {
-    G.battle.maxHp    = this.getMaxHp();
-    G.battle.maxMp    = this.getMaxMp();
-    G.battle.hp       = Math.min(G.battle.hp, G.battle.maxHp);
-    G.battle.mp       = Math.min(G.battle.mp, G.battle.maxMp);
-    G.battle.atk      = this.getAtk();
-    G.battle.def      = this.getDef();
-    G.battle.critRate = this.getCritRate();
-    G.battle.critMult = this.getCritMult();
-    G.time.lifespan   = CONSTANTS.BASE_LIFESPAN + this.getLifespanBonus();
-  },
-};
+// ===== Stats（js/player/stats.js で定義済み） =====
 
 // ===== UIManager =====
 const UIManager = {
@@ -578,34 +554,4 @@ const UIManager = {
   },
 };
 
-// ===== GameLoop =====
-const GameLoop = {
-  _id: null, _paused: false, _speed: 1,
-  start() {
-    if (this._id) this.stop();
-    this._id = setInterval(() => this._tick(), CONSTANTS.TICK_INTERVAL_MS);
-  },
-  stop()  { if (this._id) { clearInterval(this._id); this._id = null; } },
-  pause() { this._paused = true; },
-  resume(){ this._paused = false; },
-  togglePause() { this._paused = !this._paused; return this._paused; },
-  isPaused()    { return this._paused; },
-  setSpeed(s)   { if (CONSTANTS.SPEED_OPTIONS.includes(s)) this._speed = s; },
-  getSpeed()    { return this._speed; },
-  _tick() {
-    if (this._paused || G.time.isDead) return;
-    for (let i = 0; i < this._speed; i++) this._process();
-    UIManager.render();
-    G.meta.playTime += this._speed;
-  },
-  _process() {
-    TimeSystem.tick(G);
-    JobManager.tick(G);
-    SkillManager.tick(G);
-    ExplorationManager.tick(G);
-    // HP自然回復
-    G.battle.hp = Math.min(G.battle.maxHp, G.battle.hp + G.battle.maxHp * 0.0002);
-    G.battle.mp = Math.min(G.battle.maxMp, G.battle.mp + G.battle.maxMp * 0.0005);
-    Stats.update();
-  },
-};
+// GameLoop は js/core/gameloop.js で定義されています
