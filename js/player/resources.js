@@ -8,7 +8,7 @@ const Resources = {
   // ===== コイン =====
   getCoins()          { return G.resources.coins; },
   addCoins(amount)    {
-    const actual = Math.max(0, amount) * Stats.getCoinMult();
+    const actual = Math.max(0, amount);
     G.resources.coins += actual;
     G.resources.totalCoinsEarned += actual;
     return actual;
