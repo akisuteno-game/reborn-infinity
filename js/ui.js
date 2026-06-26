@@ -10,17 +10,7 @@ const SoulTree = {
   getBonus(stat) { return 0; },
 };
 
-const EquipmentManager = {
-  getStatBonus(stat) { return 0; },
-  getStatMult(stat)  { return 1; },
-  tick(G) {},
-};
-
-const PetManager = {
-  getStatBonus(stat) { return 0; },
-  tick(G) {},
-};
-
+// ExplorationManager（ui.js内で定義）
 const ExplorationManager = {
   tick(G) {
     if (!G.explore.current) return;
@@ -32,6 +22,8 @@ const ExplorationManager = {
       const coin = RNG.varyInt(area.coin, 0.3);
       G.resources.materials += mat * Stats.getMatMult();
       G.resources.coins     += coin * Stats.getCoinMult();
+      if (!G.explore.visited.includes(area.id)) G.explore.visited.push(area.id);
+      G.explore.totalExplored++;
       Notification.log(`${area.name}から帰還！素材+${mat} コイン+${coin}`);
       G.explore.current  = null;
       G.explore.progress = 0;
@@ -39,6 +31,7 @@ const ExplorationManager = {
   },
 };
 
+// CombatManager（ui.js内で定義）
 const CombatManager = {
   tick(G) {},
   startBattle(enemyId) {
@@ -76,6 +69,10 @@ const CombatManager = {
   },
   _win(enemy) {
     G.battle.totalKills++;
+    if (!G.battle.killsByEnemy) G.battle.killsByEnemy = {};
+    G.battle.killsByEnemy[enemy.id] = (G.battle.killsByEnemy[enemy.id] || 0) + 1;
+    if (enemy.id === 'dragon') G.battle.dragonKills++;
+    if (enemy.id === 'demon')  G.battle.demonKills++;
     G.resources.coins += enemy.coin;
     G.resources.fame  += enemy.coin * 0.5;
     Notification.log(enemy.name + 'を討伐！コイン+' + enemy.coin);
@@ -86,20 +83,17 @@ const CombatManager = {
   },
 };
 
-const AchievementManager = {
-  check(G) {},
-};
-
-const QuestManager = {
-  tick(G) {},
-};
-
 const EventManager = {
   tick(G) {},
 };
 
 const AutomationSystem = {
-  tick(G) {},
+  tick(G) {
+    if (G.automation.rebirth && G.time.isDead) {
+      // 自動転生は転生ボタン処理と同等の処理をGameLoopが行う
+      EventBus.emit('autoRebirth', {});
+    }
+  },
 };
 
 const ThemeManager = {
@@ -248,14 +242,27 @@ const UIManager = {
 
   _renderTab(name) {
     switch (name) {
-      case 'status':  return this._tabStatus();
-      case 'jobs':    return this._tabJobs();
-      case 'skills':  return this._tabSkills();
-      case 'explore': return this._tabExplore();
-      case 'combat':  return this._tabCombat();
-      case 'rebirth': return this._tabRebirth();
-      case 'settings':return this._tabSettings();
-      default:        return `<div class="empty-state"><div class="empty-state-icon">🚧</div><div class="empty-state-text">準備中...</div></div>`;
+      case 'status':        return this._tabStatus();
+      case 'jobs':          return this._tabJobs();
+      case 'skills':        return this._tabSkills();
+      case 'explore':       return this._tabExplore();
+      case 'combat':        return this._tabCombat();
+      case 'equipment':     return this._tabEquipment();
+      case 'craft':         return this._tabCraft();
+      case 'inventory':     return this._tabInventory();
+      case 'pets':          return this._tabPets();
+      case 'quests':        return this._tabQuests();
+      case 'achievements':  return this._tabAchievements();
+      case 'titles':        return this._tabTitles();
+      case 'collection':    return this._tabCollection();
+      case 'rebirth':       return this._tabRebirth();
+      case 'awakening':     return this._tabAwakening();
+      case 'transcendence': return this._tabTranscendence();
+      case 'divinity':      return this._tabDivinity();
+      case 'universe':      return this._tabUniverse();
+      case 'automation':    return this._tabAutomation();
+      case 'settings':      return this._tabSettings();
+      default:              return `<div class="empty-state"><div class="empty-state-icon">🚧</div><div class="empty-state-text">準備中...</div></div>`;
     }
   },
 
@@ -417,6 +424,410 @@ const UIManager = {
     </div>`;
   },
 
+
+  // ===== 装備タブ =====
+  _tabEquipment() {
+    const slots = [
+      { key: 'weapon',    label: '武器',       icon: '⚔️' },
+      { key: 'armor',     label: '防具',       icon: '🛡️' },
+      { key: 'accessory1',label: 'アクセサリ1', icon: '💍' },
+      { key: 'accessory2',label: 'アクセサリ2', icon: '💍' },
+      { key: 'relic',     label: 'レリック',   icon: '🔮' },
+    ];
+    const allItems = [...WEAPON_DATA, ...ARMOR_DATA, ...ACCESSORY_DATA, ...ARTIFACT_DATA, ...RELIC_DATA];
+    const ownedItems = G.equipment.owned.map(id => allItems.find(i => i.id === id)).filter(Boolean);
+
+    const rarityColor = { common:'var(--color-text-sub)', uncommon:'#4ade80', rare:'#60a5fa', epic:'#c084fc', legend:'#fbbf24', myth:'#f97316', divine:'#f43f5e' };
+
+    const slotsHtml = slots.map(s => {
+      const eqId = G.equipment[s.key];
+      const eq   = eqId ? allItems.find(i => i.id === eqId) : null;
+      return `<div class="stat-row" style="align-items:center">
+        <span class="stat-label">${s.icon} ${s.label}</span>
+        <span class="stat-value" style="color:${eq ? (rarityColor[eq.rarity]||'#fff') : 'var(--color-text-sub)'}">
+          ${eq ? eq.icon + ' ' + eq.name : '—'}
+        </span>
+        ${eq ? `<button class="btn btn-danger" style="font-size:10px;padding:2px 6px;margin-left:6px" data-unequip="${s.key}">外す</button>` : ''}
+      </div>`;
+    }).join('');
+
+    const ownedHtml = ownedItems.length === 0
+      ? '<div style="color:var(--color-text-sub);font-size:12px;text-align:center;padding:12px">所持装備なし</div>'
+      : ownedItems.map(item => {
+          const equipped = Object.values(G.equipment).includes(item.id);
+          return `<div class="enemy-card${equipped?' fighting':''}" style="cursor:pointer" data-equip="${item.id}">
+            <div class="flex-between">
+              <span style="font-weight:500;color:${rarityColor[item.rarity]||'#fff'}">${item.icon} ${item.name}</span>
+              <span class="badge badge-${equipped?'job':'skill'}" style="font-size:10px">${equipped?'装備中':item.slot}</span>
+            </div>
+            <div style="font-size:11px;color:var(--color-text-sub);margin-top:3px">
+              ${item.atk?'ATK+'+item.atk+' ':''}${item.def?'DEF+'+item.def+' ':''}${item.hp?'HP+'+item.hp+' ':''}${item.mp?'MP+'+item.mp+' ':''}${item.xp?'XP+'+(item.xp*100).toFixed(0)+'% ':''}${item.coin?'コイン+'+(item.coin*100).toFixed(0)+'% ':''}${item.lifespan?'寿命+'+item.lifespan+'年 ':''}
+            </div>
+          </div>`;
+        }).join('');
+
+    return `<div class="panel">
+      <div class="panel-title">🛡️ 装備スロット</div>
+      ${slotsHtml}
+      <div class="panel-title" style="margin-top:12px">🎒 所持装備（${ownedItems.length}件）</div>
+      ${ownedHtml}
+    </div>`;
+  },
+
+  // ===== クラフトタブ =====
+  _tabCraft() {
+    const list = CraftManager.getDisplayList();
+    return `<div class="panel">
+      <div class="panel-title">⚒️ クラフト</div>
+      <div style="font-size:11px;color:var(--color-text-sub);margin-bottom:10px">
+        素材: ${NumberUtil.format(G.resources.materials)} | コイン: ${NumberUtil.format(G.resources.coins)} | 総製作数: ${G.craft.totalCrafted}
+      </div>
+      ${list.map(r => `
+        <div class="enemy-card" style="margin-bottom:6px">
+          <div class="flex-between">
+            <span style="font-weight:500">${r.icon} ${r.name}</span>
+            <span class="badge badge-${r.canCraft?'job':'danger'}" style="font-size:10px">${r.canCraft?'作成可':'素材不足'}</span>
+          </div>
+          <div style="font-size:11px;color:var(--color-text-sub);margin:3px 0">${r.desc} | 所持:${r.owned}個</div>
+          <div style="font-size:11px;color:var(--color-text-sub);margin-bottom:6px">素材×${r.mat}${r.coin?` コイン×${r.coin}`:''}</div>
+          <button class="btn btn-secondary" style="font-size:11px;min-height:36px" data-craft="${r.id}" ${r.canCraft?'':'disabled'}>⚒️ クラフト</button>
+        </div>`).join('')}
+    </div>`;
+  },
+
+  // ===== 所持品タブ =====
+  _tabInventory() {
+    const items = Object.entries(G.inventory.items).filter(([,count]) => count > 0);
+    const allItems = [...WEAPON_DATA, ...ARMOR_DATA, ...ACCESSORY_DATA, ...ARTIFACT_DATA, ...RELIC_DATA];
+    return `<div class="panel">
+      <div class="panel-title">🎒 所持品（${items.length} / ${G.inventory.maxSlots}スロット）</div>
+      ${items.length === 0
+        ? '<div style="color:var(--color-text-sub);font-size:12px;text-align:center;padding:24px">所持品なし</div>'
+        : items.map(([id, count]) => {
+            const item = allItems.find(i => i.id === id);
+            return `<div class="stat-row">
+              <span class="stat-label">${item ? item.icon + ' ' + item.name : id}</span>
+              <span class="stat-value">× ${count}</span>
+            </div>`;
+          }).join('')}
+    </div>`;
+  },
+
+  // ===== ペットタブ =====
+  _tabPets() {
+    const list = PetManager.getDisplayList();
+    const rarityColor = { common:'var(--color-text-sub)', uncommon:'#4ade80', rare:'#60a5fa', epic:'#c084fc', legend:'#fbbf24' };
+    return `<div class="panel">
+      <div class="panel-title">🐾 ペット（アクティブ: ${G.pets.active.length}/${CONSTANTS.PET_MAX_ACTIVE}）</div>
+      ${list.map(p => {
+        const lv   = G.pets.levels[p.id] || 1;
+        const xp   = G.pets.xp[p.id] || 0;
+        const xpReq = PetLevels.getXpRequired(p.id, lv);
+        const xpPct = MathUtil.pct(xp, xpReq).toFixed(1);
+        return `<div class="enemy-card${p.active?' fighting':''}${!p.owned?' locked':''}">
+          <div class="flex-between">
+            <span style="font-weight:500;color:${rarityColor[p.rarity]||'#fff'}">${p.icon} ${p.name}</span>
+            <div class="flex" style="gap:4px;align-items:center">
+              ${p.owned ? `<span class="lv-badge">Lv${lv}</span>` : ''}
+              ${p.evolved ? '<span style="font-size:10px;color:#fbbf24">✨進化済</span>' : ''}
+              <span class="badge badge-${p.active?'job':p.owned?'skill':'danger'}" style="font-size:9px">${p.active?'同行中':p.owned?'所持':'未入手'}</span>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--color-text-sub);margin-top:3px">${p.desc}${!p.owned?' | 名声'+p.reqFame+(p.reqRebirth?' 転生'+p.reqRebirth+'回':'')+' 必要':''}</div>
+          ${p.owned ? `
+            <div class="mb" style="margin-top:4px">
+              <div class="bw" style="flex:1;height:4px"><div class="bf bar-xp" style="width:${xpPct}%"></div></div>
+              <span style="font-size:10px;color:var(--color-text-sub)">${xpPct}%</span>
+            </div>
+            <div class="flex" style="gap:4px;margin-top:4px">
+              ${!p.active && G.pets.active.length < CONSTANTS.PET_MAX_ACTIVE ? `<button class="btn btn-secondary" style="font-size:10px;min-height:32px" data-pet-activate="${p.id}">同行させる</button>` : ''}
+              ${p.active ? `<button class="btn btn-danger" style="font-size:10px;min-height:32px" data-pet-deactivate="${p.id}">外す</button>` : ''}
+              ${PetEvolution.canEvolve(p.id) && !p.evolved ? `<button class="btn" style="font-size:10px;min-height:32px;background:linear-gradient(135deg,#fbbf24,#f97316);color:#000" data-pet-evolve="${p.id}">✨ 進化（素材100）</button>` : ''}
+            </div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  },
+
+  // ===== クエストタブ =====
+  _tabQuests() {
+    const main = QuestManager.getMainQuests();
+    const side = QuestManager.getSideQuests();
+    const completed = G.quests.completed.length;
+    return `<div class="panel">
+      <div class="panel-title">📜 メインクエスト</div>
+      <div style="font-size:11px;color:var(--color-text-sub);margin-bottom:8px">達成済み: ${completed}件</div>
+      ${main.map(q => `
+        <div class="enemy-card${q.completed?' fighting':''}">
+          <div class="flex-between">
+            <span style="font-weight:500${q.completed?';color:var(--color-success)':''}">${q.completed?'✅ ':''} ${q.name}</span>
+            <span style="font-size:10px;color:var(--color-text-sub)">第${q.chapter}章</span>
+          </div>
+          <div style="font-size:11px;color:var(--color-text-sub);margin-top:2px">${q.desc}</div>
+          <div style="font-size:10px;color:#fbbf24;margin-top:2px">報酬: ${q.reward.coin?'コイン×'+q.reward.coin+' ':''}${q.reward.mat?'素材×'+q.reward.mat+' ':''}${q.reward.soulFragments?'魂の欠片×'+q.reward.soulFragments:''}</div>
+        </div>`).join('')}
+      <div class="panel-title" style="margin-top:12px">📋 サイドクエスト</div>
+      ${side.map(q => `
+        <div class="enemy-card${q.completed?' fighting':''}">
+          <div class="flex-between">
+            <span style="font-weight:500${q.completed?';color:var(--color-success)':''}">${q.completed?'✅ ':''} ${q.name}</span>
+          </div>
+          <div style="font-size:11px;color:var(--color-text-sub);margin-top:2px">${q.desc}</div>
+          <div style="font-size:10px;color:#fbbf24;margin-top:2px">報酬: ${q.reward.coin?'コイン×'+q.reward.coin+' ':''}${q.reward.mat?'素材×'+q.reward.mat:''}</div>
+        </div>`).join('')}
+    </div>`;
+  },
+
+  // ===== 実績タブ =====
+  _tabAchievements() {
+    const all   = AchievementManager.getAll();
+    const done  = all.filter(a => a.unlocked);
+    const total = AchievementManager.getTotalPoints();
+    const rarityColor = { common:'var(--color-text-sub)', uncommon:'#4ade80', rare:'#60a5fa', epic:'#c084fc', legend:'#fbbf24', divine:'#f43f5e' };
+
+    return `<div class="panel">
+      <div class="panel-title">🏆 実績（${done.length} / ${all.length}件 | ${total}ポイント）</div>
+      <div class="lead-panel" style="margin-bottom:10px">解除済みは上部に表示されます。</div>
+      ${[...done, ...all.filter(a=>!a.unlocked)].map(a => `
+        <div class="stat-row" style="opacity:${a.unlocked?1:0.45}">
+          <span style="font-size:16px;margin-right:6px">${a.icon}</span>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600;color:${rarityColor[a.rarity]||'#fff'}">${a.unlocked?'✅ ':''} ${a.name}</div>
+            <div style="font-size:10px;color:var(--color-text-sub)">${a.desc}${a.title?' | 称号:「'+a.title+'」':''}</div>
+          </div>
+          <span style="font-size:11px;color:#fbbf24;white-space:nowrap">${a.points||0}pt</span>
+        </div>`).join('')}
+    </div>`;
+  },
+
+  // ===== 称号タブ =====
+  _tabTitles() {
+    const unlocked = G.titles.unlocked;
+    const equipped = G.titles.equipped;
+    return `<div class="panel">
+      <div class="panel-title">👑 称号（${unlocked.length}個解放済み）</div>
+      ${unlocked.length === 0
+        ? '<div style="color:var(--color-text-sub);font-size:12px;text-align:center;padding:24px">まだ称号なし。実績を解除して獲得しよう！</div>'
+        : unlocked.map(t => `
+          <div class="enemy-card${t===equipped?' fighting':''}" data-equip-title="${t}" style="cursor:pointer">
+            <div class="flex-between">
+              <span style="font-weight:600;color:#fbbf24">「${t}」</span>
+              <span class="badge badge-${t===equipped?'job':'skill'}" style="font-size:10px">${t===equipped?'装備中':'タップで装備'}</span>
+            </div>
+          </div>`).join('')}
+      <div class="panel-title" style="margin-top:12px">現在の称号</div>
+      <div class="lead-panel">${equipped ? '「'+equipped+'」' : '（なし）'}</div>
+    </div>`;
+  },
+
+  // ===== 図鑑タブ =====
+  _tabCollection() {
+    const col = G.collection;
+    const sections = [
+      { label: '⚔️ 職業', items: col.jobs,    total: JOB_DATA.length },
+      { label: '📖 スキル', items: col.skills,  total: SKILL_DATA.length },
+      { label: '🗡️ 敵',   items: col.enemies,  total: ENEMY_DATA.length },
+      { label: '🎒 アイテム', items: col.items, total: [...WEAPON_DATA,...ARMOR_DATA,...ACCESSORY_DATA,...ARTIFACT_DATA,...RELIC_DATA].length },
+      { label: '🗺️ 地域', items: col.regions,  total: EXPLORE_DATA.length },
+      { label: '👑 称号',  items: col.titles,   total: G.titles.unlocked.length },
+    ];
+    return `<div class="panel">
+      <div class="panel-title">📚 図鑑</div>
+      ${sections.map(s => {
+        const pct = s.total > 0 ? MathUtil.pct(s.items.length, s.total).toFixed(0) : 0;
+        return `<div class="stat-row" style="flex-direction:column;align-items:stretch;margin-bottom:8px">
+          <div class="flex-between" style="margin-bottom:3px">
+            <span class="stat-label">${s.label}</span>
+            <span class="stat-value">${s.items.length} / ${s.total}</span>
+          </div>
+          <div class="bar-wrap bar-sm"><div class="bar-fill bar-xp" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('')}
+      <div class="panel-title" style="margin-top:12px">🗡️ 討伐記録</div>
+      ${ENEMY_DATA.map(e => {
+        const kills = G.battle.killsByEnemy?.[e.id] || 0;
+        return `<div class="stat-row">
+          <span class="stat-label">${e.name}</span>
+          <span class="stat-value">${kills > 0 ? kills+'体討伐' : '未討伐'}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  },
+
+  // ===== 覚醒タブ（Tier2） =====
+  _tabAwakening() {
+    const unlocked = G.rebirth.count >= 5;
+    if (!unlocked) return `<div class="panel">
+      <div class="panel-title">⭐ 覚醒</div>
+      <div class="lead-panel">5回転生すると解放されます（現在: ${G.rebirth.count}回）</div>
+    </div>`;
+
+    const crystals = G.resources.awakeningCrystals || 0;
+    const CONST_NODES = [
+      { id: 'c_xp',    name: 'XP星座',   icon: '📖', bonus: 'XP+20%',      cost: 50 },
+      { id: 'c_coin',  name: 'コイン星座',icon: '💰', bonus: 'コイン+20%',  cost: 50 },
+      { id: 'c_atk',   name: '戦力星座', icon: '⚔️', bonus: 'ATK+20',      cost: 80 },
+      { id: 'c_hp',    name: '生命星座',  icon: '❤️', bonus: 'HP+200',      cost: 80 },
+      { id: 'c_life',  name: '長命星座',  icon: '🌿', bonus: '寿命+10年',   cost: 120 },
+      { id: 'c_soul',  name: '魂星座',   icon: '🔮', bonus: '魂の欠片+50%', cost: 150 },
+    ];
+    return `<div class="panel">
+      <div class="panel-title">⭐ 覚醒システム</div>
+      <div style="font-size:11px;color:var(--color-text-sub);margin-bottom:10px">覚醒結晶: <span style="color:#c084fc;font-weight:600">${NumberUtil.format(crystals)}</span></div>
+      <div class="lead-panel" style="margin-bottom:10px">転生を重ねるごとに覚醒結晶を獲得できます。星座を強化して永続ボーナスを得ましょう。</div>
+      ${CONST_NODES.map(n => {
+        const lv = (G.awakening.constellations[n.id] || 0);
+        const owned = G.awakening.unlocked.includes(n.id);
+        const canBuy = crystals >= n.cost && !owned;
+        return `<div class="enemy-card${owned?' fighting':''}">
+          <div class="flex-between">
+            <span style="font-weight:500">${n.icon} ${n.name}</span>
+            <span class="badge badge-${owned?'job':'skill'}">${owned?'解放済み':'未解放'}</span>
+          </div>
+          <div style="font-size:11px;color:var(--color-text-sub);margin-top:2px">${n.bonus}</div>
+          ${!owned ? `<button class="btn btn-secondary" style="font-size:11px;min-height:32px;margin-top:6px" data-awakening="${n.id}" data-cost="${n.cost}" ${canBuy?'':'disabled'}>解放（結晶×${n.cost}）</button>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  },
+
+  // ===== 超越タブ（Tier3） =====
+  _tabTranscendence() {
+    const unlocked = G.rebirth.count >= 15;
+    if (!unlocked) return `<div class="panel">
+      <div class="panel-title">🌌 超越</div>
+      <div class="lead-panel">15回転生すると解放されます（現在: ${G.rebirth.count}回）</div>
+    </div>`;
+
+    const essence = G.resources.transcendenceEssence || 0;
+    const RUNE_DATA = [
+      { id: 'r_power',  name: '力のルーン',  icon: '💪', bonus: '全ATK×2',      cost: 100 },
+      { id: 'r_wisdom', name: '知のルーン',  icon: '🧠', bonus: '全XP×2',       cost: 100 },
+      { id: 'r_time',   name: '時のルーン',  icon: '⏳', bonus: '寿命×1.5',     cost: 150 },
+      { id: 'r_wealth', name: '富のルーン',  icon: '💎', bonus: '全コイン×2',   cost: 150 },
+      { id: 'r_soul',   name: '魂のルーン',  icon: '🔮', bonus: '魂の欠片×3',   cost: 200 },
+    ];
+    return `<div class="panel">
+      <div class="panel-title">🌌 超越システム</div>
+      <div style="font-size:11px;color:var(--color-text-sub);margin-bottom:10px">超越エッセンス: <span style="color:#60a5fa;font-weight:600">${NumberUtil.format(essence)}</span></div>
+      <div class="lead-panel" style="margin-bottom:10px">さらなる高みへ。ルーンを刻み、根本的な強化を手に入れましょう。</div>
+      ${RUNE_DATA.map(r => {
+        const owned = G.transcendence.runes[r.id];
+        const canBuy = essence >= r.cost && !owned;
+        return `<div class="enemy-card${owned?' fighting':''}">
+          <div class="flex-between">
+            <span style="font-weight:500">${r.icon} ${r.name}</span>
+            <span class="badge badge-${owned?'job':'skill'}">${owned?'刻印済み':'未刻印'}</span>
+          </div>
+          <div style="font-size:11px;color:var(--color-text-sub);margin-top:2px">${r.bonus}</div>
+          ${!owned ? `<button class="btn btn-secondary" style="font-size:11px;min-height:32px;margin-top:6px" data-rune="${r.id}" data-cost="${r.cost}" ${canBuy?'':'disabled'}>刻印（エッセンス×${r.cost}）</button>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  },
+
+  // ===== 神格化タブ（Tier4） =====
+  _tabDivinity() {
+    const unlocked = G.rebirth.count >= 50;
+    if (!unlocked) return `<div class="panel">
+      <div class="panel-title">✨ 神格化</div>
+      <div class="lead-panel">50回転生すると解放されます（現在: ${G.rebirth.count}回）</div>
+    </div>`;
+
+    const div = G.divinity;
+    const power = G.resources.divinePower || 0;
+    const DIVINE_CLASSES = [
+      { id: 'war_god',    name: '戦神',   icon: '⚔️', bonus: 'ATK×5 クリット率+20%' },
+      { id: 'life_god',   name: '生命神', icon: '🌿', bonus: 'HP×5 寿命+50年' },
+      { id: 'wisdom_god', name: '知恵神', icon: '🧠', bonus: 'XP×10 スキルXP×5' },
+      { id: 'wealth_god', name: '富神',   icon: '💰', bonus: 'コイン×10 素材×5' },
+    ];
+    return `<div class="panel">
+      <div class="panel-title">✨ 神格化</div>
+      <div style="font-size:11px;color:var(--color-text-sub);margin-bottom:10px">神力: <span style="color:#f43f5e;font-weight:600">${NumberUtil.format(power)}</span> | 信者: ${NumberUtil.format(div.faithers||0)}人 | 神格Lv: ${div.level||0}</div>
+      <div class="panel-title" style="margin-top:8px">神格クラス</div>
+      ${div.godClass ? `<div class="lead-panel">現在の神格: <strong>${DIVINE_CLASSES.find(c=>c.id===div.godClass)?.icon} ${DIVINE_CLASSES.find(c=>c.id===div.godClass)?.name}</strong></div>` : ''}
+      ${DIVINE_CLASSES.map(c => {
+        const active = div.godClass === c.id;
+        return `<div class="enemy-card${active?' fighting':''}" data-divine-class="${c.id}" style="cursor:pointer">
+          <div class="flex-between">
+            <span style="font-weight:500">${c.icon} ${c.name}</span>
+            <span class="badge badge-${active?'job':'skill'}">${active?'選択中':'選択'}</span>
+          </div>
+          <div style="font-size:11px;color:var(--color-text-sub);margin-top:2px">${c.bonus}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  },
+
+  // ===== 宇宙創造タブ（Tier5+） =====
+  _tabUniverse() {
+    const unlocked = G.rebirth.count >= 100;
+    if (!unlocked) return `<div class="panel">
+      <div class="panel-title">🌍 宇宙創造</div>
+      <div class="lead-panel">100回転生すると解放されます（現在: ${G.rebirth.count}回）</div>
+    </div>`;
+
+    const cp = G.resources.creationPower || 0;
+    const created = G.universe.created || 0;
+    const LAWS = [
+      { id: 'law_time',    name: '時間の法則',    icon: '⏰', bonus: 'ゲーム速度+1段階', cost: 1000 },
+      { id: 'law_life',    name: '生命の法則',    icon: '🌿', bonus: '全HP×10',          cost: 2000 },
+      { id: 'law_soul',    name: '魂の法則',      icon: '🔮', bonus: '魂の欠片×100',     cost: 5000 },
+      { id: 'law_reality', name: '現実の法則',    icon: '🌌', bonus: '全ステータス×2',   cost: 10000 },
+    ];
+    return `<div class="panel">
+      <div class="panel-title">🌍 宇宙創造システム</div>
+      <div style="font-size:11px;color:var(--color-text-sub);margin-bottom:10px">創造力: <span style="color:#22d3ee;font-weight:600">${NumberUtil.format(cp)}</span> | 創造した宇宙: ${created}個</div>
+      <div class="lead-panel" style="margin-bottom:10px">宇宙の法則を定め、存在そのものを超越しましょう。</div>
+      ${LAWS.map(l => {
+        const enacted = G.universe.laws[l.id];
+        const canBuy  = cp >= l.cost && !enacted;
+        return `<div class="enemy-card${enacted?' fighting':''}">
+          <div class="flex-between">
+            <span style="font-weight:500">${l.icon} ${l.name}</span>
+            <span class="badge badge-${enacted?'job':'skill'}">${enacted?'制定済み':'未制定'}</span>
+          </div>
+          <div style="font-size:11px;color:var(--color-text-sub);margin-top:2px">${l.bonus}</div>
+          ${!enacted ? `<button class="btn btn-secondary" style="font-size:11px;min-height:32px;margin-top:6px" data-law="${l.id}" data-cost="${l.cost}" ${canBuy?'':'disabled'}>制定（創造力×${l.cost}）</button>` : ''}
+        </div>`;
+      }).join('')}
+    </div>`;
+  },
+
+  // ===== 自動化タブ =====
+  _tabAutomation() {
+    const autos = [
+      { key: 'explore',       label: '自動探索',          icon: '🗺️', desc: 'エリアを自動で探索し続ける' },
+      { key: 'craft',         label: '自動クラフト',       icon: '⚒️', desc: 'レシピを自動でクラフトし続ける' },
+      { key: 'equip',         label: '自動装備',           icon: '🛡️', desc: '強い装備を自動で装備する' },
+      { key: 'job',           label: '自動職業変更',       icon: '⚔️', desc: '条件を満たした職業に自動転職' },
+      { key: 'rebirth',       label: '自動転生',           icon: '🔄', desc: '寿命終了時に自動で転生する', reqRebirth: 3 },
+      { key: 'awakening',     label: '自動覚醒',           icon: '⭐', desc: '覚醒結晶を自動で使用する',    reqRebirth: 10 },
+      { key: 'transcendence', label: '自動超越',           icon: '🌌', desc: 'エッセンスを自動で使用する',   reqRebirth: 20 },
+      { key: 'everything',    label: '全自動モード',       icon: '🤖', desc: 'すべてを自動化する（神の視点）', reqRebirth: 50 },
+    ];
+    return `<div class="panel">
+      <div class="panel-title">⚙️ 自動化設定</div>
+      <div class="lead-panel" style="margin-bottom:10px">転生を重ねると自動化オプションが解放されます。</div>
+      ${autos.map(a => {
+        const req = a.reqRebirth || 0;
+        const available = G.rebirth.count >= req;
+        const active = G.automation[a.key];
+        return `<div class="enemy-card${active?' fighting':''}${!available?' locked':''}">
+          <div class="flex-between">
+            <span style="font-weight:500">${a.icon} ${a.label}</span>
+            <label class="flex" style="align-items:center;gap:6px;cursor:${available?'pointer':'not-allowed'}">
+              <input type="checkbox" ${active?'checked':''} ${!available?'disabled':''} data-auto="${a.key}" style="width:16px;height:16px;accent-color:var(--color-accent)">
+              <span class="badge badge-${active?'job':available?'skill':'danger'}" style="font-size:10px">${active?'ON':available?'OFF':'転生'+req+'回'}</span>
+            </label>
+          </div>
+          <div style="font-size:11px;color:var(--color-text-sub);margin-top:2px">${a.desc}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  },
+
   // ===== 転生タブ =====
   _tabRebirth() {
     const maxLv   = Math.max(...Object.values(G.jobs.levels));
@@ -551,6 +962,120 @@ const UIManager = {
       resetBtn.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
       resetBtn.addEventListener('click', () => { if(!t) go(); t=false; });
     }
+
+    // ===== 新タブのイベントバインド =====
+    // 装備：装備ボタン
+    document.querySelectorAll('[data-equip]').forEach(el => {
+      let t = false;
+      const go = () => {
+        const item = EquipmentManager.getById(el.dataset.equip);
+        if (!item) return;
+        const slot = item.slot === 'accessory' ? (G.equipment.accessory1 ? 'accessory2' : 'accessory1') : item.slot;
+        EquipmentManager.equip(item.id, slot);
+        this.render();
+      };
+      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
+      el.addEventListener('click', () => { if(!t) go(); t=false; });
+    });
+    // 装備：外すボタン
+    document.querySelectorAll('[data-unequip]').forEach(el => {
+      let t = false;
+      const go = () => { EquipmentManager.unequip(el.dataset.unequip); this.render(); };
+      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
+      el.addEventListener('click', () => { if(!t) go(); t=false; });
+    });
+    // クラフト
+    document.querySelectorAll('[data-craft]').forEach(el => {
+      let t = false;
+      const go = () => { CraftManager.craft(el.dataset.craft); this.render(); };
+      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
+      el.addEventListener('click', () => { if(!t) go(); t=false; });
+    });
+    // ペット：同行
+    document.querySelectorAll('[data-pet-activate]').forEach(el => {
+      let t = false;
+      const go = () => { PetManager.activate(el.dataset.petActivate); this.render(); };
+      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
+      el.addEventListener('click', () => { if(!t) go(); t=false; });
+    });
+    // ペット：外す
+    document.querySelectorAll('[data-pet-deactivate]').forEach(el => {
+      let t = false;
+      const go = () => { PetManager.deactivate(el.dataset.petDeactivate); this.render(); };
+      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
+      el.addEventListener('click', () => { if(!t) go(); t=false; });
+    });
+    // ペット：進化
+    document.querySelectorAll('[data-pet-evolve]').forEach(el => {
+      let t = false;
+      const go = () => { PetEvolution.evolve(el.dataset.petEvolve); this.render(); };
+      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
+      el.addEventListener('click', () => { if(!t) go(); t=false; });
+    });
+    // 称号装備
+    document.querySelectorAll('[data-equip-title]').forEach(el => {
+      let t = false;
+      const go = () => { TitleManager.equip(el.dataset.equipTitle); this.render(); };
+      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
+      el.addEventListener('click', () => { if(!t) go(); t=false; });
+    });
+    // 覚醒：星座解放
+    document.querySelectorAll('[data-awakening]').forEach(el => {
+      let t = false;
+      const go = () => {
+        const cost = parseInt(el.dataset.cost);
+        if ((G.resources.awakeningCrystals||0) < cost) return;
+        G.resources.awakeningCrystals -= cost;
+        if (!G.awakening.unlocked.includes(el.dataset.awakening)) G.awakening.unlocked.push(el.dataset.awakening);
+        Notification.log('星座「'+el.dataset.awakening+'」を解放！');
+        this.render();
+      };
+      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
+      el.addEventListener('click', () => { if(!t) go(); t=false; });
+    });
+    // 超越：ルーン刻印
+    document.querySelectorAll('[data-rune]').forEach(el => {
+      let t = false;
+      const go = () => {
+        const cost = parseInt(el.dataset.cost);
+        if ((G.resources.transcendenceEssence||0) < cost) return;
+        G.resources.transcendenceEssence -= cost;
+        G.transcendence.runes[el.dataset.rune] = true;
+        Notification.log('ルーン「'+el.dataset.rune+'」を刻印！');
+        this.render();
+      };
+      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
+      el.addEventListener('click', () => { if(!t) go(); t=false; });
+    });
+    // 神格クラス選択
+    document.querySelectorAll('[data-divine-class]').forEach(el => {
+      let t = false;
+      const go = () => { G.divinity.godClass = el.dataset.divineClass; Notification.log('神格クラスを変更！'); this.render(); };
+      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
+      el.addEventListener('click', () => { if(!t) go(); t=false; });
+    });
+    // 宇宙の法則制定
+    document.querySelectorAll('[data-law]').forEach(el => {
+      let t = false;
+      const go = () => {
+        const cost = parseInt(el.dataset.cost);
+        if ((G.resources.creationPower||0) < cost) return;
+        G.resources.creationPower -= cost;
+        G.universe.laws[el.dataset.law] = true;
+        Notification.log('法則「'+el.dataset.law+'」を制定！');
+        this.render();
+      };
+      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
+      el.addEventListener('click', () => { if(!t) go(); t=false; });
+    });
+    // 自動化チェックボックス
+    document.querySelectorAll('[data-auto]').forEach(el => {
+      el.addEventListener('change', () => {
+        G.automation[el.dataset.auto] = el.checked;
+        this.render();
+      });
+    });
+
   },
 };
 
