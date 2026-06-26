@@ -29,14 +29,14 @@ const TimeSystem = {
     G.battle.hp = Math.min(G.battle.maxHp, G.battle.hp + 10);
     G.battle.mp = Math.min(G.battle.maxMp, G.battle.mp + 2);
     // イベント通知
-    EventBus.emit('yearPassed', { age: G.time.age });
+    EventBus.emit(GAME_EVENTS.YEAR_PASSED, { age: G.time.age });
   },
 
   // ===== 寿命チェック =====
   _checkLifespan(G) {
     if (G.time.age >= G.time.lifespan && !G.time.isDead) {
       G.time.isDead = true;
-      EventBus.emit('lifespanEnd', {});
+      EventBus.emit(GAME_EVENTS.LIFESPAN_END, {});
     }
   },
 
