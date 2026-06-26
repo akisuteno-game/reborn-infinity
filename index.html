@@ -58,8 +58,30 @@
         <button class="nav-tab" data-tab="combat"><span class="nav-icon">🗡️</span><span class="nav-label">戦闘</span></button>
       </div>
       <div class="sidebar-section">
+        <div class="nav-section-label">育成</div>
+        <button class="nav-tab" data-tab="equipment"><span class="nav-icon">🛡️</span><span class="nav-label">装備</span></button>
+        <button class="nav-tab" data-tab="craft"><span class="nav-icon">⚒️</span><span class="nav-label">クラフト</span></button>
+        <button class="nav-tab" data-tab="inventory"><span class="nav-icon">🎒</span><span class="nav-label">所持品</span></button>
+        <button class="nav-tab" data-tab="pets"><span class="nav-icon">🐾</span><span class="nav-label">ペット</span></button>
+      </div>
+      <div class="sidebar-section">
+        <div class="nav-section-label">進行</div>
+        <button class="nav-tab" data-tab="quests"><span class="nav-icon">📜</span><span class="nav-label">クエスト</span></button>
+        <button class="nav-tab" data-tab="achievements"><span class="nav-icon">🏆</span><span class="nav-label">実績</span></button>
+        <button class="nav-tab" data-tab="titles"><span class="nav-icon">👑</span><span class="nav-label">称号</span></button>
+        <button class="nav-tab" data-tab="collection"><span class="nav-icon">📚</span><span class="nav-label">図鑑</span></button>
+      </div>
+      <div class="sidebar-section">
         <div class="nav-section-label">転生</div>
         <button class="nav-tab" data-tab="rebirth"><span class="nav-icon">🔄</span><span class="nav-label">転生</span><span class="nav-badge hidden" id="rebirth-badge">!</span></button>
+        <button class="nav-tab" data-tab="awakening"><span class="nav-icon">⭐</span><span class="nav-label">覚醒</span></button>
+        <button class="nav-tab" data-tab="transcendence"><span class="nav-icon">🌌</span><span class="nav-label">超越</span></button>
+        <button class="nav-tab" data-tab="divinity"><span class="nav-icon">✨</span><span class="nav-label">神格化</span></button>
+        <button class="nav-tab" data-tab="universe"><span class="nav-icon">🌍</span><span class="nav-label">宇宙創造</span></button>
+        <button class="nav-tab" data-tab="automation"><span class="nav-icon">⚙️</span><span class="nav-label">自動化</span></button>
+      </div>
+      <div class="sidebar-section">
+        <div class="nav-section-label">その他</div>
         <button class="nav-tab" data-tab="settings"><span class="nav-icon">🔧</span><span class="nav-label">設定</span></button>
       </div>
     </nav>
@@ -117,6 +139,68 @@
   <script src="js/player/traits.js"></script>
   <script src="js/player/age.js"></script>
   <script src="js/player/lifespan.js"></script>
+
+  <!-- Crafting -->
+  <script src="js/crafting/materials.js"></script>
+  <script src="js/crafting/recipes.js"></script>
+  <script src="js/crafting/refining.js"></script>
+  <script src="js/crafting/enchanting.js"></script>
+  <script src="js/crafting/upgrading.js"></script>
+  <script src="js/crafting/craftManager.js"></script>
+
+  <!-- Equipment -->
+  <script src="js/equipment/weapons.js"></script>
+  <script src="js/equipment/armors.js"></script>
+  <script src="js/equipment/accessories.js"></script>
+  <script src="js/equipment/artifacts.js"></script>
+  <script src="js/equipment/relics.js"></script>
+  <script src="js/equipment/creatorGear.js"></script>
+  <script src="js/equipment/equipmentManager.js"></script>
+
+  <!-- Pets -->
+  <script src="js/pets/petLevels.js"></script>
+  <script src="js/pets/petEvolution.js"></script>
+  <script src="js/pets/petExpeditions.js"></script>
+  <script src="js/pets/petManager.js"></script>
+
+  <!-- Quests -->
+  <script src="js/quests/mainQuests.js"></script>
+  <script src="js/quests/sideQuests.js"></script>
+  <script src="js/quests/dailyQuests.js"></script>
+  <script src="js/quests/achievementQuests.js"></script>
+  <script src="js/quests/hiddenQuests.js"></script>
+  <script src="js/quests/questManager.js"></script>
+
+  <!-- Achievements -->
+  <script src="js/achievements/lifeAchievements.js"></script>
+  <script src="js/achievements/jobAchievements.js"></script>
+  <script src="js/achievements/skillAchievements.js"></script>
+  <script src="js/achievements/combatAchievements.js"></script>
+  <script src="js/achievements/explorationAchievements.js"></script>
+  <script src="js/achievements/questAchievements.js"></script>
+  <script src="js/achievements/equipmentAchievements.js"></script>
+  <script src="js/achievements/rebirthAchievements.js"></script>
+  <script src="js/achievements/collectionAchievements.js"></script>
+  <script src="js/achievements/challengeAchievements.js"></script>
+  <script src="js/achievements/secretAchievements.js"></script>
+  <script src="js/achievements/achievementManager.js"></script>
+
+  <!-- Titles -->
+  <script src="js/titles/lifeTitles.js"></script>
+  <script src="js/titles/bossTitles.js"></script>
+  <script src="js/titles/jobTitles.js"></script>
+  <script src="js/titles/skillTitles.js"></script>
+  <script src="js/titles/secretTitles.js"></script>
+  <script src="js/titles/titleManager.js"></script>
+
+  <!-- Collections -->
+  <script src="js/collections/jobCollection.js"></script>
+  <script src="js/collections/skillCollection.js"></script>
+  <script src="js/collections/enemyCollection.js"></script>
+  <script src="js/collections/itemCollection.js"></script>
+  <script src="js/collections/regionCollection.js"></script>
+  <script src="js/collections/titleCollection.js"></script>
+  <script src="js/collections/eventCollection.js"></script>
 
   <!-- Save -->
   <script src="js/save/migration.js"></script>
