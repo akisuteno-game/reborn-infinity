@@ -208,8 +208,12 @@ const UIManager = {
     this._currentTab = tabName;
     const el = document.getElementById('tab-content');
     if (!el) return;
-    el.innerHTML = this._renderTab(tabName);
-    this._bindTabEvents(tabName);
+    try {
+      el.innerHTML = this._renderTab(tabName);
+    } catch(e) {
+      el.innerHTML = `<div class="panel"><div class="panel-title" style="color:#ef4444">⚠️ 描画エラー</div><pre style="font-size:10px;color:#ef4444;white-space:pre-wrap">${e.message}\n${e.stack}</pre></div>`;
+      console.error('[UIManager] renderTab error:', e);
+    }
   },
 
   showRebirthNotice() {
@@ -222,8 +226,13 @@ const UIManager = {
     this._renderHeader();
     if (this._currentTab) {
       const el = document.getElementById('tab-content');
-      if (el) el.innerHTML = this._renderTab(this._currentTab);
-      this._bindTabEvents(this._currentTab);
+      if (!el) return;
+      try {
+        el.innerHTML = this._renderTab(this._currentTab);
+      } catch(e) {
+        // エラー時は現在の表示を維持（ログだけ出す）
+        console.error('[UIManager] render error:', e);
+      }
     }
   },
 
@@ -364,7 +373,7 @@ const UIManager = {
               <span style="font-size:10px;color:var(--color-text-sub)">${NumberUtil.format(jxp)} / ${NumberUtil.format(jreq)}</span>
             </div>
             <div class="bar-wrap" style="height:8px;border-radius:4px;background:var(--color-bg-tertiary)">
-              <div style="height:100%;border-radius:4px;background:linear-gradient(90deg,var(--color-accent),color-mix(in srgb,var(--color-accent) 60%,#fff));width:${jxpPct}%;transition:width 0.3s"></div>
+              <div style="height:100%;border-radius:4px;background:linear-gradient(90deg,var(--color-accent),#a78bfa);width:${jxpPct}%;transition:width 0.3s"></div>
             </div>
             <div style="font-size:10px;color:var(--color-text-sub);margin-top:2px;text-align:right">${jxpPct}%</div>
           </div>
@@ -373,14 +382,14 @@ const UIManager = {
           <div style="margin-bottom:4px">
             <div class="flex-between" style="margin-bottom:4px">
               <span style="font-size:12px;font-weight:600">${skill ? skill.icon + ' ' + skill.name : '—'}</span>
-              <span class="lv-badge" style="background:color-mix(in srgb,var(--color-xp) 15%,transparent);color:var(--color-xp)">Lv${slv}</span>
+              <span class="lv-badge" style="background:rgba(74,222,128,0.15);color:var(--color-xp)">Lv${slv}</span>
             </div>
             <div class="flex-between" style="margin-bottom:3px">
               <span style="font-size:10px;color:var(--color-text-sub)">スキル XP</span>
               <span style="font-size:10px;color:var(--color-text-sub)">${NumberUtil.format(sxp)} / ${NumberUtil.format(sreq)}</span>
             </div>
             <div class="bar-wrap" style="height:8px;border-radius:4px;background:var(--color-bg-tertiary)">
-              <div style="height:100%;border-radius:4px;background:linear-gradient(90deg,var(--color-xp),color-mix(in srgb,var(--color-xp) 60%,#fff));width:${sxpPct}%;transition:width 0.3s"></div>
+              <div style="height:100%;border-radius:4px;background:linear-gradient(90deg,var(--color-xp),#86efac);width:${sxpPct}%;transition:width 0.3s"></div>
             </div>
             <div style="font-size:10px;color:var(--color-text-sub);margin-top:2px;text-align:right">${sxpPct}%</div>
           </div>
@@ -461,7 +470,7 @@ const UIManager = {
                 <span style="font-size:10px;color:var(--color-text-sub)">${xpPct}%（${NumberUtil.format(xp)} / ${NumberUtil.format(req)}）</span>
               </div>
               <div class="bar-wrap" style="height:6px;background:var(--color-bg-tertiary);border-radius:3px">
-                <div style="height:100%;border-radius:3px;background:linear-gradient(90deg,${rc},color-mix(in srgb,${rc} 50%,#fff));width:${xpPct}%;transition:width 0.3s"></div>
+                <div style="height:100%;border-radius:3px;background:linear-gradient(90deg,${rc},#888);width:${xpPct}%;transition:width 0.3s"></div>
               </div>
             </div>
             <div>
@@ -470,7 +479,7 @@ const UIManager = {
                 <span style="font-size:10px;color:var(--color-text-sub)">Lv${lv} / ${maxLv}</span>
               </div>
               <div class="bar-wrap" style="height:4px;background:var(--color-bg-tertiary);border-radius:2px">
-                <div style="height:100%;border-radius:2px;background:color-mix(in srgb,${rc} 50%,#888);width:${lvPct}%;transition:width 0.3s"></div>
+                <div style="height:100%;border-radius:2px;background:#888;width:${lvPct}%;transition:width 0.3s"></div>
               </div>
             </div>
           ` : `
@@ -525,7 +534,7 @@ const UIManager = {
         <div class="job-card${s.isActive?' active':''}${!s.isUnlocked?' locked':''}" data-skill="${s.id}" style="touch-action:manipulation;--sel-c:var(--color-xp)">
           <div class="job-card-header">
             <span class="job-name">${s.icon} ${s.name}</span>
-            <span class="lv-badge" style="background:color-mix(in srgb,var(--color-xp) 15%,transparent);color:var(--color-xp)">Lv${s.level}</span>
+            <span class="lv-badge" style="background:rgba(74,222,128,0.15);color:var(--color-xp)">Lv${s.level}</span>
           </div>
           <div class="job-desc">${!s.isUnlocked ? '🔒 ' + s.unlockDesc : s.desc}</div>
           ${s.isUnlocked ? `<div class="mb"><div class="bw" style="flex:1;height:5px"><div class="bf bar-xp" style="width:${s.xpPct.toFixed(1)}%"></div></div><span style="font-size:10px;color:var(--color-text-sub)">${s.xpPct.toFixed(0)}%</span></div>` : ''}
