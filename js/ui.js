@@ -96,11 +96,7 @@ const AutomationSystem = {
   },
 };
 
-const ThemeManager = {
-  apply(theme) {
-    document.body.className = 'theme-' + (theme || 'default');
-  },
-};
+// ThemeManager は js/core/theme.js で定義済み
 
 // ===== 通知システム =====
 const Notification = {
