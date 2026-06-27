@@ -268,84 +268,251 @@ const UIManager = {
 
   // ===== ステータスタブ =====
   _tabStatus() {
-    const agePct     = TimeSystem.getAgePct(G).toFixed(1);
-    const hpPct      = MathUtil.pct(G.battle.hp, G.battle.maxHp).toFixed(1);
-    const mpPct      = MathUtil.pct(G.battle.mp, G.battle.maxMp).toFixed(1);
-    const job        = JobUnlocks.getById(G.jobs.current);
-    const skill      = SkillUnlocks.getById(G.skills.current);
-    const jlv        = G.jobs.levels[G.jobs.current] || 1;
-    const jxp        = G.jobs.xp[G.jobs.current] || 0;
-    const jreq       = JobExp.getRequired(G.jobs.current, jlv);
-    const slv        = G.skills.levels[G.skills.current] || 1;
-    const sxp        = G.skills.xp[G.skills.current] || 0;
-    const sreq       = SkillManager._xpRequired(G.skills.current, slv);
-    const logs       = Notification.getLogs().slice(0, 10);
+    const agePct  = TimeSystem.getAgePct(G).toFixed(1);
+    const hpPct   = MathUtil.pct(G.battle.hp, G.battle.maxHp).toFixed(1);
+    const mpPct   = MathUtil.pct(G.battle.mp, G.battle.maxMp).toFixed(1);
+    const job     = JobUnlocks.getById(G.jobs.current);
+    const skill   = SkillUnlocks.getById(G.skills.current);
+    const jlv     = G.jobs.levels[G.jobs.current] || 1;
+    const jxp     = G.jobs.xp[G.jobs.current] || 0;
+    const jreq    = JobExp.getRequired(G.jobs.current, jlv);
+    const slv     = G.skills.levels[G.skills.current] || 1;
+    const sxp     = G.skills.xp[G.skills.current] || 0;
+    const sreq    = SkillManager._xpRequired(G.skills.current, slv);
+    const logs    = Notification.getLogs().slice(0, 10);
+    const jxpPct  = MathUtil.pct(jxp, jreq).toFixed(1);
+    const sxpPct  = MathUtil.pct(sxp, sreq).toFixed(1);
+
+    // 名声の次の閾値
+    const fameThresholds = [0,10,30,80,200,500,1000,3000,10000,50000,200000];
+    const nextFame = fameThresholds.find(t => t > G.resources.fame) || G.resources.fame * 2;
+    const prevFame = fameThresholds.slice().reverse().find(t => t <= G.resources.fame) || 0;
+    const famePct  = MathUtil.pct(G.resources.fame - prevFame, nextFame - prevFame).toFixed(1);
+
+    // 転生回数ゲージ（次の転生Tier解放まで）
+    const rebirthTiers = [0,3,5,10,15,25,50,100,200,500];
+    const nextRTier = rebirthTiers.find(t => t > G.rebirth.count) || G.rebirth.count + 1;
+    const prevRTier = rebirthTiers.slice().reverse().find(t => t <= G.rebirth.count) || 0;
+    const rebirthPct = MathUtil.pct(G.rebirth.count - prevRTier, nextRTier - prevRTier).toFixed(1);
+
+    const gaugeRow = (label, val, max, pct, color, extra = '') => `
+      <div style="margin-bottom:8px">
+        <div class="flex-between" style="margin-bottom:3px">
+          <span class="stat-label">${label}</span>
+          <span class="stat-value">${val}${extra}</span>
+        </div>
+        <div class="bar-wrap bar-sm"><div class="bar-fill" style="background:${color};width:${pct}%;transition:width 0.3s"></div></div>
+      </div>`;
+
+    const statRow = (label, val, color = '') => `
+      <div class="stat-row">
+        <span class="stat-label">${label}</span>
+        <span class="stat-value"${color ? ` style="color:${color}"` : ''}>${val}</span>
+      </div>`;
 
     return `
     <div class="grid-2" style="gap:8px">
-      <div class="panel">
-        <div class="panel-title">📊 ステータス</div>
-        <div class="stat-row"><span class="stat-label">年齢</span><span class="stat-value">${G.time.age}歳 ${G.time.day}日</span></div>
-        <div class="bar-wrap bar-sm" style="margin:4px 0 8px"><div class="bar-fill bar-age" style="width:${agePct}%"></div></div>
-        <div class="stat-row"><span class="stat-label">寿命</span><span class="stat-value">${G.time.lifespan}年</span></div>
-        <div class="stat-row"><span class="stat-label">HP</span><span class="stat-value">${Math.floor(G.battle.hp)} / ${G.battle.maxHp}</span></div>
-        <div class="bar-wrap bar-sm" style="margin:2px 0 8px"><div class="bar-fill bar-hp" style="width:${hpPct}%"></div></div>
-        <div class="stat-row"><span class="stat-label">MP</span><span class="stat-value">${Math.floor(G.battle.mp)} / ${G.battle.maxMp}</span></div>
-        <div class="bar-wrap bar-sm" style="margin:2px 0 8px"><div class="bar-fill bar-mp" style="width:${mpPct}%"></div></div>
-        <div class="stat-row"><span class="stat-label">ATK</span><span class="stat-value">${Stats.getAtk()}</span></div>
-        <div class="stat-row"><span class="stat-label">DEF</span><span class="stat-value">${Stats.getDef()}</span></div>
-        <div class="stat-row"><span class="stat-label">会心率</span><span class="stat-value">${(Stats.getCritRate()*100).toFixed(1)}%</span></div>
-        <div class="stat-row"><span class="stat-label">コイン</span><span class="stat-value" style="color:var(--color-coin)">${NumberUtil.format(G.resources.coins)}</span></div>
-        <div class="stat-row"><span class="stat-label">名声</span><span class="stat-value" style="color:var(--color-fame)">${NumberUtil.format(G.resources.fame)}</span></div>
-        <div class="stat-row"><span class="stat-label">素材</span><span class="stat-value" style="color:var(--color-mat)">${NumberUtil.format(G.resources.materials)}</span></div>
-        ${G.rebirth.count > 0 ? `<div class="stat-row"><span class="stat-label">魂の欠片</span><span class="stat-value" style="color:var(--color-soul)">${NumberUtil.format(G.resources.soulFragments)}</span></div>` : ''}
+
+      <!-- 左列：生命・資源 -->
+      <div>
+        <div class="panel">
+          <div class="panel-title">🌿 生命</div>
+          ${gaugeRow('年齢 / 寿命', G.time.age + '歳 ' + G.time.day + '日', G.time.lifespan, agePct, 'var(--color-age)', ' / ' + G.time.lifespan + '年')}
+          ${gaugeRow('HP', Math.floor(G.battle.hp), G.battle.maxHp, hpPct, 'var(--color-hp)', ' / ' + G.battle.maxHp)}
+          ${gaugeRow('MP', Math.floor(G.battle.mp), G.battle.maxMp, mpPct, 'var(--color-mp)', ' / ' + G.battle.maxMp)}
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">⚔️ 戦闘力</div>
+          ${statRow('ATK', Stats.getAtk())}
+          ${statRow('DEF', Stats.getDef())}
+          ${statRow('会心率', (Stats.getCritRate()*100).toFixed(1) + '%')}
+          ${statRow('会心倍率', Stats.getCritMult().toFixed(2) + '×')}
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">💰 資源</div>
+          ${gaugeRow('名声', NumberUtil.format(G.resources.fame), nextFame, famePct, 'var(--color-fame)', ' / ' + NumberUtil.format(nextFame))}
+          ${statRow('コイン', NumberUtil.format(G.resources.coins), 'var(--color-coin)')}
+          ${statRow('素材', NumberUtil.format(G.resources.materials), 'var(--color-mat)')}
+          ${G.rebirth.count > 0 ? statRow('魂の欠片', NumberUtil.format(G.resources.soulFragments), 'var(--color-soul)') : ''}
+        </div>
+
+        ${G.rebirth.count > 0 ? `
+        <div class="panel">
+          <div class="panel-title">🔄 転生</div>
+          <div style="margin-bottom:8px">
+            <div class="flex-between" style="margin-bottom:3px">
+              <span class="stat-label">転生回数</span>
+              <span class="stat-value">${G.rebirth.count}回 → 次のTier解放: ${nextRTier}回</span>
+            </div>
+            <div class="bar-wrap bar-sm"><div class="bar-fill" style="background:var(--color-soul);width:${rebirthPct}%;transition:width 0.3s"></div></div>
+          </div>
+        </div>` : ''}
       </div>
-      <div class="panel">
-        <div class="panel-title">⚡ 現在の活動</div>
-        <div class="active-panel">
-          <div class="active-panel-label">職業</div>
-          <div class="flex-between" style="margin-bottom:4px">
-            <span style="font-weight:500">${job ? job.icon + ' ' + job.name : '—'}</span>
-            <span class="lv-badge">Lv${jlv}</span>
+
+      <!-- 右列：現在の活動 -->
+      <div>
+        <div class="panel">
+          <div class="panel-title">⚡ 現在の活動</div>
+
+          <!-- 職業 -->
+          <div style="margin-bottom:12px">
+            <div class="flex-between" style="margin-bottom:4px">
+              <span style="font-size:12px;font-weight:600">${job ? job.icon + ' ' + job.name : '—'}</span>
+              <span class="lv-badge">Lv${jlv}</span>
+            </div>
+            <div class="flex-between" style="margin-bottom:3px">
+              <span style="font-size:10px;color:var(--color-text-sub)">職業 XP</span>
+              <span style="font-size:10px;color:var(--color-text-sub)">${NumberUtil.format(jxp)} / ${NumberUtil.format(jreq)}</span>
+            </div>
+            <div class="bar-wrap" style="height:8px;border-radius:4px;background:var(--color-bg-tertiary)">
+              <div style="height:100%;border-radius:4px;background:linear-gradient(90deg,var(--color-accent),color-mix(in srgb,var(--color-accent) 60%,#fff));width:${jxpPct}%;transition:width 0.3s"></div>
+            </div>
+            <div style="font-size:10px;color:var(--color-text-sub);margin-top:2px;text-align:right">${jxpPct}%</div>
           </div>
-          <div class="mb"><div class="bw" style="flex:1;height:6px"><div class="bf bar-xp" style="width:${MathUtil.pct(jxp,jreq).toFixed(1)}%"></div></div>
-          <span style="font-size:10px;color:var(--color-text-sub)">${NumberUtil.format(jxp)}/${NumberUtil.format(jreq)}</span></div>
-        </div>
-        <div class="active-panel">
-          <div class="active-panel-label">スキル訓練</div>
-          <div class="flex-between" style="margin-bottom:4px">
-            <span style="font-weight:500">${skill ? skill.icon + ' ' + skill.name : '—'}</span>
-            <span class="lv-badge" style="background:color-mix(in srgb,var(--color-xp) 15%,transparent);color:var(--color-xp)">Lv${slv}</span>
+
+          <!-- スキル -->
+          <div style="margin-bottom:4px">
+            <div class="flex-between" style="margin-bottom:4px">
+              <span style="font-size:12px;font-weight:600">${skill ? skill.icon + ' ' + skill.name : '—'}</span>
+              <span class="lv-badge" style="background:color-mix(in srgb,var(--color-xp) 15%,transparent);color:var(--color-xp)">Lv${slv}</span>
+            </div>
+            <div class="flex-between" style="margin-bottom:3px">
+              <span style="font-size:10px;color:var(--color-text-sub)">スキル XP</span>
+              <span style="font-size:10px;color:var(--color-text-sub)">${NumberUtil.format(sxp)} / ${NumberUtil.format(sreq)}</span>
+            </div>
+            <div class="bar-wrap" style="height:8px;border-radius:4px;background:var(--color-bg-tertiary)">
+              <div style="height:100%;border-radius:4px;background:linear-gradient(90deg,var(--color-xp),color-mix(in srgb,var(--color-xp) 60%,#fff));width:${sxpPct}%;transition:width 0.3s"></div>
+            </div>
+            <div style="font-size:10px;color:var(--color-text-sub);margin-top:2px;text-align:right">${sxpPct}%</div>
           </div>
-          <div class="mb"><div class="bw" style="flex:1;height:6px"><div class="bf" style="background:var(--color-xp);width:${MathUtil.pct(sxp,sreq).toFixed(1)}%"></div></div>
-          <span style="font-size:10px;color:var(--color-text-sub)">${NumberUtil.format(sxp)}/${NumberUtil.format(sreq)}</span></div>
         </div>
-        <div class="panel-title" style="margin-top:8px">📋 ログ</div>
-        <div class="log-panel">${logs.map(l => `<div class="log-item">${l}</div>`).join('') || '<div class="log-item">ログなし</div>'}</div>
+
+        <!-- 倍率パネル -->
+        <div class="panel">
+          <div class="panel-title">📈 倍率</div>
+          ${statRow('XP倍率', NumberUtil.mult(Stats.getXpMult()))}
+          ${statRow('コイン倍率', NumberUtil.mult(Stats.getCoinMult()))}
+          ${statRow('名声倍率', NumberUtil.mult(Stats.getFameMult()))}
+          ${statRow('素材倍率', NumberUtil.mult(Stats.getMatMult()))}
+        </div>
+
+        <!-- ログ -->
+        <div class="panel">
+          <div class="panel-title">📋 ログ</div>
+          <div class="log-panel">${logs.map(l => `<div class="log-item">${l}</div>`).join('') || '<div class="log-item">ログなし</div>'}</div>
+        </div>
       </div>
     </div>`;
   },
 
   // ===== 職業タブ =====
   _tabJobs() {
-    const jobs = JobManager.getDisplayList();
-    const cats = [...new Set(jobs.map(j => j.category))];
-    return `
-    <div class="panel">
-      <div class="panel-title">⚔️ 職業（${jobs.filter(j=>j.isUnlocked).length}解放済み）</div>
-      <div style="font-size:11px;color:var(--color-text-sub);margin-bottom:10px">XP倍率: ${NumberUtil.mult(Stats.getXpMult())} | コイン倍率: ${NumberUtil.mult(Stats.getCoinMult())}</div>
-      ${jobs.map(j => `
-        <div class="job-card${j.isActive?' active':''}${!j.isUnlocked?' locked':''}" data-job="${j.id}" style="touch-action:manipulation">
+    const allJobs = JobManager.getDisplayList();
+    const rankNames = ['Rank0：村人', 'Rank1：見習い', 'Rank2：一人前', 'Rank3：上級', 'Rank4：英雄', 'Rank5：神', 'Rank6：概念', 'Rank7：創造主'];
+    const rankColors = ['var(--color-text-sub)','#4ade80','#60a5fa','#c084fc','#fbbf24','#f97316','#f43f5e','#fcd34d'];
+    const byRank = {};
+    for (const j of allJobs) {
+      if (!byRank[j.rank]) byRank[j.rank] = [];
+      byRank[j.rank].push(j);
+    }
+
+    const condRow = (met, label, barPct) => `
+      <div style="margin-bottom:4px">
+        <span style="font-size:10px;color:${met ? '#4ade80' : 'var(--color-text-sub)'}">
+          ${met ? '✅' : '⬜'} ${label}
+        </span>
+        ${barPct !== undefined ? `<div class="bar-wrap" style="height:3px;margin-top:2px;background:var(--color-bg-tertiary);border-radius:2px"><div style="height:100%;border-radius:2px;background:${met?'#4ade80':'#60a5fa'};width:${barPct}%;transition:width 0.3s"></div></div>` : ''}
+      </div>`;
+
+    const jobCard = (j) => {
+      const isActive   = j.isActive;
+      const isUnlocked = j.isUnlocked;
+      const canUnlock  = JobUnlocks.canUnlock(j.id) && !isUnlocked;
+      const job        = JobUnlocks.getById(j.id);
+      const rc         = rankColors[j.rank] || '#fff';
+
+      const condFame    = !job.reqFame    || G.resources.fame >= job.reqFame;
+      const condRebirth = !job.reqRebirth || G.rebirth.count  >= job.reqRebirth;
+      const condTier    = !job.reqTier    || (G.tier||0)      >= job.reqTier;
+
+      const lv   = G.jobs.levels[j.id] || 1;
+      const xp   = G.jobs.xp[j.id] || 0;
+      const req  = JobExp.getRequired(j.id, lv);
+      const xpPct = MathUtil.pct(xp, req).toFixed(1);
+      const maxLv = 10;
+      const lvPct = MathUtil.pct(Math.min(lv, maxLv), maxLv).toFixed(0);
+
+      return `
+        <div class="job-card${isActive ? ' active' : ''}${!isUnlocked ? ' locked' : ''}"
+             ${isUnlocked ? `data-job="${j.id}"` : ''} style="touch-action:manipulation;margin-bottom:6px">
           <div class="job-card-header">
-            <span class="job-name">${j.icon} ${j.name}</span>
-            <div class="flex" style="gap:6px;align-items:center">
-              <span class="lv-badge">Lv${j.level}</span>
-              <span class="badge badge-${j.isActive?'job':'skill'}" style="font-size:9px">${j.isActive?'訓練中':'選択'}</span>
+            <span class="job-name" style="color:${isUnlocked ? rc : 'var(--color-text-sub)'}">${j.icon} ${j.name}</span>
+            <div class="flex" style="gap:5px;align-items:center">
+              ${isUnlocked ? `<span class="lv-badge">Lv${lv}</span>` : ''}
+              <span class="badge badge-${isActive ? 'job' : isUnlocked ? 'skill' : canUnlock ? 'warning' : 'danger'}" style="font-size:9px">
+                ${isActive ? '訓練中' : isUnlocked ? '解放済' : canUnlock ? '解放可能' : '未解放'}
+              </span>
             </div>
           </div>
-          <div class="job-desc">${!j.isUnlocked ? '🔒 ' + j.unlockDesc : j.desc + ' | +' + j.income + 'コイン/日'}</div>
-          ${j.isUnlocked ? `<div class="mb"><div class="bw" style="flex:1;height:5px"><div class="bf bar-xp" style="width:${j.xpPct.toFixed(1)}%"></div></div><span style="font-size:10px;color:var(--color-text-sub)">${j.xpPct.toFixed(0)}%</span></div>` : ''}
-        </div>`).join('')}
+          <div class="job-desc" style="margin-bottom:5px">${j.desc}${isUnlocked ? ' | +' + j.income + 'コイン/日' : ''}</div>
+          ${isUnlocked ? `
+            <div style="margin-bottom:4px">
+              <div class="flex-between" style="margin-bottom:2px">
+                <span style="font-size:10px;color:var(--color-text-sub)">XP</span>
+                <span style="font-size:10px;color:var(--color-text-sub)">${xpPct}%（${NumberUtil.format(xp)} / ${NumberUtil.format(req)}）</span>
+              </div>
+              <div class="bar-wrap" style="height:6px;background:var(--color-bg-tertiary);border-radius:3px">
+                <div style="height:100%;border-radius:3px;background:linear-gradient(90deg,${rc},color-mix(in srgb,${rc} 50%,#fff));width:${xpPct}%;transition:width 0.3s"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex-between" style="margin-bottom:2px">
+                <span style="font-size:10px;color:var(--color-text-sub)">成長度</span>
+                <span style="font-size:10px;color:var(--color-text-sub)">Lv${lv} / ${maxLv}</span>
+              </div>
+              <div class="bar-wrap" style="height:4px;background:var(--color-bg-tertiary);border-radius:2px">
+                <div style="height:100%;border-radius:2px;background:color-mix(in srgb,${rc} 50%,#888);width:${lvPct}%;transition:width 0.3s"></div>
+              </div>
+            </div>
+          ` : `
+            <div style="margin-top:4px">
+              ${job.reqFame    ? condRow(condFame,    '名声 ' + job.reqFame + '（現在: ' + Math.floor(G.resources.fame) + '）', MathUtil.pct(Math.min(G.resources.fame, job.reqFame), job.reqFame).toFixed(0)) : ''}
+              ${job.reqRebirth ? condRow(condRebirth, '転生 ' + job.reqRebirth + '回（現在: ' + G.rebirth.count + '回）',  MathUtil.pct(Math.min(G.rebirth.count, job.reqRebirth), job.reqRebirth).toFixed(0)) : ''}
+              ${job.reqTier    ? condRow(condTier,    'Tier ' + job.reqTier + '（現在: ' + (G.tier||0) + '）') : ''}
+              ${job.reqLevel   ? Object.entries(job.reqLevel).map(([id, reqLv]) => {
+                  const reqJob = JobUnlocks.getById(id);
+                  const curLv  = G.jobs.levels[id] || 1;
+                  const met    = curLv >= reqLv;
+                  const bp     = MathUtil.pct(Math.min(curLv, reqLv), reqLv).toFixed(0);
+                  return condRow(met, (reqJob ? reqJob.name : id) + ' Lv' + reqLv + '（現在Lv' + curLv + '）', bp);
+                }).join('') : ''}
+            </div>
+          `}
+        </div>`;
+    };
+
+    return `
+    <div class="panel">
+      <div class="panel-title">⚔️ 職業（${allJobs.filter(j=>j.isUnlocked).length} / ${allJobs.length}解放）</div>
+      <div style="font-size:11px;color:var(--color-text-sub);margin-bottom:12px">
+        XP倍率: ${NumberUtil.mult(Stats.getXpMult())} | コイン倍率: ${NumberUtil.mult(Stats.getCoinMult())}
+      </div>
+      ${Object.entries(byRank).sort((a,b)=>a[0]-b[0]).map(([rank, jobs]) => {
+        const r = parseInt(rank);
+        const unlocked = jobs.filter(j => j.isUnlocked).length;
+        const rc = rankColors[r] || '#fff';
+        return `
+          <div style="margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span style="font-size:11px;font-weight:700;color:${rc};letter-spacing:0.05em">${rankNames[r] || 'Rank' + r}</span>
+              <span style="font-size:10px;color:var(--color-text-sub)">${unlocked}/${jobs.length}</span>
+              <div style="flex:1;height:1px;background:${rc};opacity:0.3;border-radius:1px"></div>
+            </div>
+            ${jobs.map(j => jobCard(j)).join('')}
+          </div>`;
+      }).join('')}
     </div>`;
   },
 
