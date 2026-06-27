@@ -4,18 +4,29 @@
    ============================================ */
 
 /* ===== ベースレイアウト ===== */
-html, body {
+html {
   width: 100%;
   height: 100%;
+  /* iOS Safari でのバウンス防止 */
+  overscroll-behavior: none;
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
   background: var(--color-bg);
   overflow: hidden;
+  /* iOS の慣性スクロール */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ===== アプリコンテナ ===== */
 #app-container {
   display: flex;
   width: 100%;
-  height: calc(100vh - var(--header-height));
+  /* dvh：アドレスバーの高さを考慮 */
+  height: calc(100dvh - var(--header-height));
   margin-top: var(--header-height);
   overflow: hidden;
 }
@@ -23,15 +34,223 @@ html, body {
 /* ===== メインコンテンツ ===== */
 #main-content {
   flex: 1;
+  min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
   background: var(--color-bg);
+  /* iOS Safari の慣性スクロール */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 .tab-content-area {
   min-height: 100%;
   padding: var(--content-padding);
+  /* モバイルボトムナビ分の余白（480px以下で有効） */
+  padding-bottom: var(--content-padding-bottom, var(--content-padding));
+  /* 最後のカードが隠れないよう最低限の余白 */
+  box-sizing: border-box;
 }
+
+/* ===== グリッドシステム ===== */
+.grid-1 { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-4); }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); }
+
+.grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+/* ===== フレックスユーティリティ ===== */
+.flex        { display: flex; }
+.flex-col    { display: flex; flex-direction: column; }
+.flex-wrap   { flex-wrap: wrap; }
+.flex-1      { flex: 1; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.flex-end    { display: flex; align-items: center; justify-content: flex-end; }
+.items-center { align-items: center; }
+.items-start  { align-items: flex-start; }
+.items-end    { align-items: flex-end; }
+.justify-center  { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-end     { justify-content: flex-end; }
+.gap-1  { gap: var(--space-1); }
+.gap-2  { gap: var(--space-2); }
+.gap-3  { gap: var(--space-3); }
+.gap-4  { gap: var(--space-4); }
+.gap-6  { gap: var(--space-6); }
+.gap-8  { gap: var(--space-8); }
+
+/* ===== スペーシングユーティリティ ===== */
+.p-1  { padding: var(--space-1); }
+.p-2  { padding: var(--space-2); }
+.p-3  { padding: var(--space-3); }
+.p-4  { padding: var(--space-4); }
+.p-6  { padding: var(--space-6); }
+.p-8  { padding: var(--space-8); }
+
+.px-2 { padding-left: var(--space-2); padding-right: var(--space-2); }
+.px-4 { padding-left: var(--space-4); padding-right: var(--space-4); }
+.px-6 { padding-left: var(--space-6); padding-right: var(--space-6); }
+.py-2 { padding-top: var(--space-2); padding-bottom: var(--space-2); }
+.py-4 { padding-top: var(--space-4); padding-bottom: var(--space-4); }
+
+.m-0  { margin: 0; }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-4 { margin-bottom: var(--space-4); }
+.mb-6 { margin-bottom: var(--space-6); }
+.mb-8 { margin-bottom: var(--space-8); }
+.mt-2 { margin-top: var(--space-2); }
+.mt-4 { margin-top: var(--space-4); }
+.mt-6 { margin-top: var(--space-6); }
+.mt-8 { margin-top: var(--space-8); }
+
+/* ===== 幅・高さ ===== */
+.w-full  { width: 100%; }
+.h-full  { height: 100%; }
+.w-auto  { width: auto; }
+.min-w-0 { min-width: 0; }
+
+/* ===== オーバーフロー ===== */
+.overflow-hidden { overflow: hidden; }
+.overflow-auto   { overflow: auto; }
+.overflow-y-auto { overflow-y: auto; }
+
+/* ===== ポジション ===== */
+.relative { position: relative; }
+.absolute { position: absolute; }
+.fixed    { position: fixed; }
+.sticky   { position: sticky; }
+
+/* ===== 通知エリア ===== */
+#notification-area {
+  position: fixed;
+  bottom: var(--space-8);
+  right: var(--space-8);
+  z-index: var(--z-toast);
+  pointer-events: none;
+}
+
+#toast-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: flex-end;
+}
+
+/* ===== モーダルオーバーレイ ===== */
+#modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+#modal-container {
+  background: var(--color-bg-secondary);
+  border: var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  max-width: 560px;
+  width: calc(100% - var(--space-8) * 2);
+  max-height: 80dvh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+
+/* ===== ツールチップ ===== */
+#tooltip {
+  position: fixed;
+  z-index: var(--z-tooltip);
+  pointer-events: none;
+  max-width: 280px;
+}
+
+/* ===== レスポンシブ ===== */
+
+/* タブレット縦（768〜1024px）*/
+@media (max-width: 1024px) and (min-width: 769px) {
+  :root {
+    --sidebar-width: 150px;
+    --content-padding: 10px;
+  }
+}
+
+/* タブレット横・小デスク（〜768px）*/
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: var(--sidebar-collapsed);
+    --content-padding: 8px;
+  }
+
+  .grid-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .grid-4 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* スマホ（〜480px）：ボトムナビ */
+@media (max-width: 480px) {
+  :root {
+    --content-padding: 8px;
+    /* ボトムナビ56px + 余裕8px */
+    --content-padding-bottom: 72px;
+  }
+
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    grid-template-columns: 1fr;
+  }
+
+  #notification-area {
+    /* ボトムナビより上に表示 */
+    bottom: calc(56px + var(--space-4));
+    right: var(--space-4);
+    left: var(--space-4);
+  }
+
+  #app-container {
+    flex-direction: column;
+    height: calc(100dvh - var(--header-height) - 56px);
+  }
+}
+
+/* 超小型（〜360px）*/
+@media (max-width: 360px) {
+  :root {
+    --content-padding: 6px;
+    --content-padding-bottom: 72px;
+  }
+}
+
+/* 横向きスマホ */
+@media (max-width: 768px) and (orientation: landscape) and (max-height: 500px) {
+  :root {
+    --header-height: 38px;
+    --content-padding-bottom: 52px;
+  }
+
+  #sidebar {
+    height: 48px !important;
+  }
+
+  .nav-tab {
+    min-height: 48px !important;
+  }
+}
+
 
 /* ===== グリッドシステム ===== */
 .grid-1 { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
