@@ -219,11 +219,21 @@
     overflow-x: auto;
     overflow-y: hidden;
     z-index: var(--z-sidebar);
+    /* iOS ホームバー対応 */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    /* スクロールバー非表示 */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  #sidebar::-webkit-scrollbar {
+    display: none;
   }
 
   #app-container {
     flex-direction: column;
-    height: calc(100vh - var(--header-height) - 56px);
+    height: calc(100dvh - var(--header-height) - 56px - env(safe-area-inset-bottom, 0px));
   }
 
   .sidebar-section {
@@ -238,12 +248,13 @@
 
   .nav-tab {
     flex-direction: column;
-    gap: var(--space-1);
+    gap: 2px;
     padding: var(--space-2) var(--space-3);
     min-width: 52px;
     min-height: 56px;
     justify-content: center;
     font-size: 9px;
+    flex-shrink: 0;
   }
 
   .nav-label {
