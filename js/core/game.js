@@ -9,11 +9,11 @@ const Game = {
   async init() {
     console.log(`[Game] Reborn Infinity v${CONSTANTS.VERSION} 起動中...`);
 
-    // 依存チェック
-    const required = { UIManager, ThemeManager, GameLoop, SaveManager, Config, State, AutoSave };
+    // 依存チェック（必須モジュールのみ）
+    const required = { UIManager, ThemeManager, GameLoop, SaveManager, Config, State };
     for (const [name, obj] of Object.entries(required)) {
       if (typeof obj === 'undefined') {
-        throw new Error(`必須モジュール "${name}" が読み込まれていません。index.html を再デプロイしてください。`);
+        throw new Error(`必須モジュール "${name}" が読み込まれていません。`);
       }
     }
 
@@ -48,10 +48,10 @@ const Game = {
       GameLoop.start();
 
       // 8. オートセーブ開始
-      AutoSave.start();
+      if (typeof AutoSave !== 'undefined') AutoSave.start();
 
       // 9. オフライン進行処理
-      if (Config.get('offlineProgress') && loaded) {
+      if (typeof OfflineProgress !== 'undefined' && Config.get('offlineProgress') && loaded) {
         OfflineProgress.process();
       }
 
