@@ -146,6 +146,7 @@ const UIManager = {
     this._bindNavTabs();
     this._bindSpeedButtons();
     this._bindPauseButton();
+    this._initDelegation();
     this.showTab('status');
   },
 
@@ -991,7 +992,148 @@ const UIManager = {
     </div>`;
   },
 
-  // ===== 転生タブ =====
+  // ===== イベント委譲（一度だけ登録、DOM再生成後も有効） =====
+  _initDelegation() {
+    const content = document.getElementById('tab-content');
+    if (!content) return;
+
+    // タッチ/クリック両対応のユーティリティ
+    let _lastTouch = 0;
+
+    const handle = (e) => {
+      // タッチイベントの場合はclickを無視（二重発火防止）
+      if (e.type === 'click' && Date.now() - _lastTouch < 600) return;
+      if (e.type === 'touchstart') { e.preventDefault(); _lastTouch = Date.now(); }
+
+      const el = e.target.closest('[data-job],[data-skill],[data-explore],[data-enemy],[data-craft],[data-equip],[data-unequip],[data-pet-activate],[data-pet-deactivate],[data-pet-evolve],[data-equip-title],[data-awakening],[data-rune],[data-divine-class],[data-law],[id="atk-btn"],[id="rebirth-btn"],[id="save-btn"],[id="export-btn"],[id="import-btn"],[id="reset-btn"]');
+      if (!el) return;
+
+      // 職業選択
+      if (el.dataset.job) {
+        JobManager.select(el.dataset.job); this.render(); return;
+      }
+      // スキル選択
+      if (el.dataset.skill) {
+        SkillManager.select(el.dataset.skill); this.render(); return;
+      }
+      // 探索
+      if (el.dataset.explore) {
+        const id = el.dataset.explore;
+        const area = EXPLORE_DATA.find(a => a.id === id);
+        if (!area || G.resources.fame < area.reqFame) return;
+        if (G.explore.current === id) {
+          G.explore.current = null; G.explore.progress = 0;
+          Notification.log(area.name + 'から引き返した');
+        } else {
+          G.explore.current = id; G.explore.progress = 0;
+          Notification.log(area.name + 'へ出発！');
+        }
+        this.render(); return;
+      }
+      // 戦闘：敵選択
+      if (el.dataset.enemy) {
+        CombatManager.startBattle(el.dataset.enemy); this.render(); return;
+      }
+      // 攻撃ボタン
+      if (el.id === 'atk-btn') {
+        CombatManager.attack(); return;
+      }
+      // クラフト
+      if (el.dataset.craft) {
+        CraftManager.craft(el.dataset.craft); this.render(); return;
+      }
+      // 装備：装備
+      if (el.dataset.equip) {
+        const item = EquipmentManager.getById(el.dataset.equip);
+        if (!item) return;
+        const slot = item.slot === 'accessory' ? (G.equipment.accessory1 ? 'accessory2' : 'accessory1') : item.slot;
+        EquipmentManager.equip(item.id, slot); this.render(); return;
+      }
+      // 装備：外す
+      if (el.dataset.unequip) {
+        EquipmentManager.unequip(el.dataset.unequip); this.render(); return;
+      }
+      // ペット：同行
+      if (el.dataset.petActivate) {
+        PetManager.activate(el.dataset.petActivate); this.render(); return;
+      }
+      // ペット：外す
+      if (el.dataset.petDeactivate) {
+        PetManager.deactivate(el.dataset.petDeactivate); this.render(); return;
+      }
+      // ペット：進化
+      if (el.dataset.petEvolve) {
+        PetEvolution.evolve(el.dataset.petEvolve); this.render(); return;
+      }
+      // 称号装備
+      if (el.dataset.equipTitle) {
+        TitleManager.equip(el.dataset.equipTitle); this.render(); return;
+      }
+      // 覚醒
+      if (el.dataset.awakening) {
+        const cost = parseInt(el.dataset.cost);
+        if ((G.resources.awakeningCrystals || 0) < cost || el.disabled) return;
+        G.resources.awakeningCrystals -= cost;
+        if (!G.awakening.unlocked.includes(el.dataset.awakening)) G.awakening.unlocked.push(el.dataset.awakening);
+        Notification.log('星座「' + el.dataset.awakening + '」を解放！');
+        this.render(); return;
+      }
+      // 超越ルーン
+      if (el.dataset.rune) {
+        const cost = parseInt(el.dataset.cost);
+        if ((G.resources.transcendenceEssence || 0) < cost || el.disabled) return;
+        G.resources.transcendenceEssence -= cost;
+        G.transcendence.runes[el.dataset.rune] = true;
+        Notification.log('ルーン「' + el.dataset.rune + '」を刻印！');
+        this.render(); return;
+      }
+      // 神格クラス
+      if (el.dataset.divineClass) {
+        G.divinity.godClass = el.dataset.divineClass;
+        Notification.log('神格クラスを変更！'); this.render(); return;
+      }
+      // 宇宙の法則
+      if (el.dataset.law) {
+        const cost = parseInt(el.dataset.cost);
+        if ((G.resources.creationPower || 0) < cost || el.disabled) return;
+        G.resources.creationPower -= cost;
+        G.universe.laws[el.dataset.law] = true;
+        Notification.log('法則「' + el.dataset.law + '」を制定！');
+        this.render(); return;
+      }
+    };
+
+    content.addEventListener('touchstart', handle, { passive: false });
+    content.addEventListener('click', handle);
+
+    // 自動化チェックボックスは change イベントが必要なので委譲で処理
+    content.addEventListener('change', (e) => {
+      if (e.target.dataset.auto) {
+        G.automation[e.target.dataset.auto] = e.target.checked;
+      }
+    });
+
+    // 設定タブのボタン類（tab-content外にある場合もあるので document で捕捉）
+    document.addEventListener('click', (e) => {
+      const el = e.target.closest('[id="save-btn"],[id="export-btn"],[id="import-btn"],[id="reset-btn"],[id="rebirth-btn"]');
+      if (!el) return;
+      if (el.id === 'save-btn')    { SaveManager.save(); Notification.show('セーブしました', '', 'info'); }
+      if (el.id === 'export-btn')  { ExportSave.export(); }
+      if (el.id === 'import-btn')  { ImportSave.prompt(); }
+      if (el.id === 'reset-btn')   { Game.hardReset(); }
+      if (el.id === 'rebirth-btn') {
+        const frags = MathUtil.calcSoulFragments(G);
+        if (!confirm('転生しますか？魂の欠片を ' + frags + ' 個獲得します。')) return;
+        G.resources.soulFragments += frags;
+        G.rebirth.count++;
+        State.init();
+        Notification.show('転生しました！', '魂の欠片 +' + frags, 'success');
+        this.render();
+      }
+    });
+  },
+
+
   _tabRebirth() {
     const maxLv   = Math.max(...Object.values(G.jobs.levels));
     const frags   = MathUtil.calcSoulFragments(G);
@@ -1031,215 +1173,7 @@ const UIManager = {
 
   // ===== タブ内イベントバインド =====
   _bindTabEvents(name) {
-    // 職業選択
-    document.querySelectorAll('[data-job]').forEach(el => {
-      let t = false;
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; JobManager.select(el.dataset.job); this.render(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) { JobManager.select(el.dataset.job); this.render(); } t=false; });
-    });
-    // スキル選択
-    document.querySelectorAll('[data-skill]').forEach(el => {
-      let t = false;
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; SkillManager.select(el.dataset.skill); this.render(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) { SkillManager.select(el.dataset.skill); this.render(); } t=false; });
-    });
-    // 探索
-    document.querySelectorAll('[data-explore]').forEach(el => {
-      let t = false;
-      const go = () => {
-        const id = el.dataset.explore;
-        const a  = EXPLORE_DATA.find(a => a.id === id);
-        if (!a || G.resources.fame < a.reqFame || G.explore.current === id) return;
-        G.explore.current  = id;
-        G.explore.progress = 0;
-        Notification.log(a.name + 'へ出発！');
-        this.render();
-      };
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) go(); t=false; });
-    });
-    // 敵選択
-    document.querySelectorAll('[data-enemy]').forEach(el => {
-      let t = false;
-      const go = () => { CombatManager.startBattle(el.dataset.enemy); this.render(); };
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) go(); t=false; });
-    });
-    // 攻撃ボタン
-    const atkBtn = document.getElementById('atk-btn');
-    if (atkBtn) {
-      let t = false;
-      atkBtn.addEventListener('touchstart', e => { e.preventDefault(); t = true; CombatManager.attack(); }, { passive: false });
-      atkBtn.addEventListener('click', () => { if(!t) CombatManager.attack(); t=false; });
-    }
-    // 転生ボタン
-    const rbBtn = document.getElementById('rebirth-btn');
-    if (rbBtn) {
-      let t = false;
-      const doRebirth = () => {
-        if (!G.time.isDead) return;
-        const frags = MathUtil.calcSoulFragments(G);
-        const bonus = MathUtil.calcRebirthBonus(G.rebirth.count + 1);
-        G.resources.soulFragments += frags;
-        G.rebirth.bonusXp = bonus;
-        G.rebirth.count++;
-        G.time.day = 0; G.time.age = CONSTANTS.START_AGE;
-        G.time.isDead = false;
-        G.resources.coins = 0; G.resources.fame = 0; G.resources.materials = 0;
-        G.battle.hp = Stats.getMaxHp(); G.battle.mp = Stats.getMaxMp();
-        JobManager.resetOnRebirth();
-        SkillManager.resetOnRebirth();
-        G.explore.current = null; G.explore.progress = 0;
-        const badge = document.getElementById('rebirth-badge');
-        if (badge) badge.classList.add('hidden');
-        Notification.show('転生 ' + G.rebirth.count + '回目！', 'XPボーナス: ' + NumberUtil.mult(bonus), 'accent');
-        EventBus.emit(GAME_EVENTS.REBIRTH, { count: G.rebirth.count, bonus });
-        this.render();
-      };
-      rbBtn.addEventListener('touchstart', e => { e.preventDefault(); t = true; doRebirth(); }, { passive: false });
-      rbBtn.addEventListener('click', () => { if(!t) doRebirth(); t=false; });
-    }
-    // 設定ボタン
-    const saveBtn = document.getElementById('save-btn');
-    if (saveBtn) {
-      let t = false;
-      const go = () => { SaveManager.save(); Notification.show('セーブしました', '', 'info'); };
-      saveBtn.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      saveBtn.addEventListener('click', () => { if(!t) go(); t=false; });
-    }
-    const exportBtn = document.getElementById('export-btn');
-    if (exportBtn) {
-      let t = false;
-      const go = async () => { await ExportSave.copyToClipboard(); Notification.show('クリップボードにコピーしました', '', 'info'); };
-      exportBtn.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      exportBtn.addEventListener('click', () => { if(!t) go(); t=false; });
-    }
-    const resetBtn = document.getElementById('reset-btn');
-    if (resetBtn) {
-      let t = false;
-      const go = () => {
-        if (!confirm('本当にリセットしますか？')) return;
-        SaveManager.deleteSave();
-        location.reload();
-      };
-      resetBtn.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      resetBtn.addEventListener('click', () => { if(!t) go(); t=false; });
-    }
-
-    // ===== 新タブのイベントバインド =====
-    // 装備：装備ボタン
-    document.querySelectorAll('[data-equip]').forEach(el => {
-      let t = false;
-      const go = () => {
-        const item = EquipmentManager.getById(el.dataset.equip);
-        if (!item) return;
-        const slot = item.slot === 'accessory' ? (G.equipment.accessory1 ? 'accessory2' : 'accessory1') : item.slot;
-        EquipmentManager.equip(item.id, slot);
-        this.render();
-      };
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) go(); t=false; });
-    });
-    // 装備：外すボタン
-    document.querySelectorAll('[data-unequip]').forEach(el => {
-      let t = false;
-      const go = () => { EquipmentManager.unequip(el.dataset.unequip); this.render(); };
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) go(); t=false; });
-    });
-    // クラフト
-    document.querySelectorAll('[data-craft]').forEach(el => {
-      let t = false;
-      const go = () => { CraftManager.craft(el.dataset.craft); this.render(); };
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) go(); t=false; });
-    });
-    // ペット：同行
-    document.querySelectorAll('[data-pet-activate]').forEach(el => {
-      let t = false;
-      const go = () => { PetManager.activate(el.dataset.petActivate); this.render(); };
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) go(); t=false; });
-    });
-    // ペット：外す
-    document.querySelectorAll('[data-pet-deactivate]').forEach(el => {
-      let t = false;
-      const go = () => { PetManager.deactivate(el.dataset.petDeactivate); this.render(); };
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) go(); t=false; });
-    });
-    // ペット：進化
-    document.querySelectorAll('[data-pet-evolve]').forEach(el => {
-      let t = false;
-      const go = () => { PetEvolution.evolve(el.dataset.petEvolve); this.render(); };
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) go(); t=false; });
-    });
-    // 称号装備
-    document.querySelectorAll('[data-equip-title]').forEach(el => {
-      let t = false;
-      const go = () => { TitleManager.equip(el.dataset.equipTitle); this.render(); };
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) go(); t=false; });
-    });
-    // 覚醒：星座解放
-    document.querySelectorAll('[data-awakening]').forEach(el => {
-      let t = false;
-      const go = () => {
-        const cost = parseInt(el.dataset.cost);
-        if ((G.resources.awakeningCrystals||0) < cost) return;
-        G.resources.awakeningCrystals -= cost;
-        if (!G.awakening.unlocked.includes(el.dataset.awakening)) G.awakening.unlocked.push(el.dataset.awakening);
-        Notification.log('星座「'+el.dataset.awakening+'」を解放！');
-        this.render();
-      };
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) go(); t=false; });
-    });
-    // 超越：ルーン刻印
-    document.querySelectorAll('[data-rune]').forEach(el => {
-      let t = false;
-      const go = () => {
-        const cost = parseInt(el.dataset.cost);
-        if ((G.resources.transcendenceEssence||0) < cost) return;
-        G.resources.transcendenceEssence -= cost;
-        G.transcendence.runes[el.dataset.rune] = true;
-        Notification.log('ルーン「'+el.dataset.rune+'」を刻印！');
-        this.render();
-      };
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) go(); t=false; });
-    });
-    // 神格クラス選択
-    document.querySelectorAll('[data-divine-class]').forEach(el => {
-      let t = false;
-      const go = () => { G.divinity.godClass = el.dataset.divineClass; Notification.log('神格クラスを変更！'); this.render(); };
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) go(); t=false; });
-    });
-    // 宇宙の法則制定
-    document.querySelectorAll('[data-law]').forEach(el => {
-      let t = false;
-      const go = () => {
-        const cost = parseInt(el.dataset.cost);
-        if ((G.resources.creationPower||0) < cost) return;
-        G.resources.creationPower -= cost;
-        G.universe.laws[el.dataset.law] = true;
-        Notification.log('法則「'+el.dataset.law+'」を制定！');
-        this.render();
-      };
-      el.addEventListener('touchstart', e => { e.preventDefault(); t = true; go(); }, { passive: false });
-      el.addEventListener('click', () => { if(!t) go(); t=false; });
-    });
-    // 自動化チェックボックス
-    document.querySelectorAll('[data-auto]').forEach(el => {
-      el.addEventListener('change', () => {
-        G.automation[el.dataset.auto] = el.checked;
-        this.render();
-      });
-    });
-
-  },
-};
+    // イベント委譲で処理 (_initDelegation で設定済み)
+  },};
 
 // GameLoop は js/core/gameloop.js で定義されています
