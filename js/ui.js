@@ -118,24 +118,6 @@ const Notification = {
   getLogs() { return this._log; },
 };
 
-// ===== 探索データ =====
-const EXPLORE_DATA = [
-  { id: 'village_outskirts', name: '村の外れ',  reqFame: 0,  ticks: 50,  mat: 2,  coin: 5,  desc: '初心者向け' },
-  { id: 'forest',            name: '近くの森',  reqFame: 10, ticks: 80,  mat: 4,  coin: 10, desc: '名声10が必要' },
-  { id: 'cave',              name: '洞窟',      reqFame: 25, ticks: 120, mat: 8,  coin: 20, desc: '名声25が必要' },
-  { id: 'ruins',             name: '古代遺跡',  reqFame: 50, ticks: 200, mat: 15, coin: 50, desc: '名声50が必要' },
-  { id: 'dragon_nest',       name: '竜の巣',   reqFame: 100,ticks: 350, mat: 40, coin: 120,desc: '名声100が必要' },
-];
-
-// ===== 敵データ =====
-const ENEMY_DATA = [
-  { id: 'slime',  name: 'スライム', hp: 30,  atk: 3,  def: 1,  coin: 5,   reqFame: 0  },
-  { id: 'goblin', name: 'ゴブリン', hp: 60,  atk: 8,  def: 3,  coin: 12,  reqFame: 10 },
-  { id: 'orc',    name: 'オーク',   hp: 120, atk: 15, def: 8,  coin: 30,  reqFame: 25 },
-  { id: 'dragon', name: 'ドラゴン', hp: 300, atk: 35, def: 20, coin: 100, reqFame: 60 },
-  { id: 'demon',  name: '魔王',     hp: 600, atk: 60, def: 35, coin: 300, reqFame: 90 },
-];
-
 // ===== Stats（js/player/stats.js で定義済み） =====
 
 // ===== UIManager =====
