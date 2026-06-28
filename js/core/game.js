@@ -156,5 +156,39 @@ const Game = {
 
 // ===== DOM読み込み完了後に起動 =====
 document.addEventListener('DOMContentLoaded', () => {
-  Game.init();
+  // デバッグ: どこで止まるか可視化
+  const dbg = document.createElement('div');
+  dbg.id = 'debug-overlay';
+  dbg.style.cssText = 'position:fixed;top:50px;left:0;right:0;z-index:99999;background:#111;color:#4ade80;font-size:11px;padding:8px;font-family:monospace;max-height:60vh;overflow:auto';
+  document.body.appendChild(dbg);
+  const log = (msg, color='#4ade80') => {
+    const d = document.createElement('div');
+    d.style.color = color;
+    d.textContent = new Date().toLocaleTimeString() + ' ' + msg;
+    dbg.appendChild(d);
+    console.log(msg);
+  };
+
+  window.__dbg = log;
+  log('DOMContentLoaded OK');
+  log('UIManager: ' + (typeof UIManager));
+  log('ThemeManager: ' + (typeof ThemeManager));
+  log('GameLoop: ' + (typeof GameLoop));
+  log('SaveManager: ' + (typeof SaveManager));
+  log('Config: ' + (typeof Config));
+  log('State: ' + (typeof State));
+  log('AutoSave: ' + (typeof AutoSave));
+  log('Stats: ' + (typeof Stats));
+  log('SoulTree: ' + (typeof SoulTree));
+  log('EquipmentManager: ' + (typeof EquipmentManager));
+  log('PetManager: ' + (typeof PetManager));
+  log('G: ' + (typeof G));
+
+  Game.init().then(() => {
+    log('Game.init() 完了');
+    setTimeout(() => { const o = document.getElementById('debug-overlay'); if(o) o.remove(); }, 5000);
+  }).catch(e => {
+    log('Game.init() 失敗: ' + e.message, '#ef4444');
+    log(e.stack || '', '#f97316');
+  });
 });
